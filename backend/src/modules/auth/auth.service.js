@@ -1,5 +1,6 @@
 import User from "../../models/user.model.js";
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 import {
   generateAccessToken,
   generateRefreshToken
@@ -52,4 +53,30 @@ export const loginUser = async (data) => {
   const refreshToken = generateRefreshToken(user);
 
   return { user, accessToken, refreshToken };
+};
+
+export const refreshAccessToken = async (refreshToken) => {
+  if (!refreshToken) {
+    throw new Error("No refresh token");
+  }
+
+  let decoded;
+
+  try {
+    decoded = jwt.verify(
+      refreshToken,
+      process.env.JWT_REFRESH_SECRET
+    );
+  } catch (error) {
+    throw new Error("Invalid refresh token");
+  }
+
+  // generate new access token
+  const accessToken = jwt.sign(
+    { userId: decoded.userId },
+    process.env.JWT_ACCESS_SECRET,
+    { expiresIn: "15m" }
+  );
+
+  return accessToken;
 };

@@ -1,5 +1,6 @@
 import { registerUser } from "./auth.service.js";
 import { loginUser } from "./auth.service.js";
+import { refreshAccessToken } from "./auth.service.js";
 
 export const register = async (req, res) => {
   try {
@@ -48,6 +49,21 @@ export const login = async (req, res) => {
       });
   } catch (error) {
     res.status(400).json({ message: error.message });
+  }
+};
+
+export const refreshToken = async (req, res) => {
+  try {
+    const token = req.cookies.refreshToken;
+
+    const accessToken = await refreshAccessToken(token);
+
+    res.status(200).json({
+      success: true,
+      accessToken
+    });
+  } catch (error) {
+    res.status(401).json({ message: error.message });
   }
 };
 

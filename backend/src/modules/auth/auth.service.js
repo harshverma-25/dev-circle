@@ -22,8 +22,30 @@ export const registerUser = async (data) => {
     name,
     email,
     password: hashedPassword,
-    role
+    
   });
+
+  // generate tokens
+  const accessToken = generateAccessToken(user);
+  const refreshToken = generateRefreshToken(user);
+
+  return { user, accessToken, refreshToken };
+};
+
+export const loginUser = async (data) => {
+  const { email, password } = data;
+
+  // check user exists
+  const user = await User.findOne({ email });
+  if (!user) {
+    throw new Error("Invalid email or password");
+  }
+
+  // compare password
+  const isMatch = await bcrypt.compare(password, user.password);
+  if (!isMatch) {
+    throw new Error("Invalid email or password");
+  }
 
   // generate tokens
   const accessToken = generateAccessToken(user);

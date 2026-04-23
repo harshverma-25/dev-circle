@@ -67,3 +67,29 @@ export const refreshToken = async (req, res) => {
   }
 };
 
+import { logoutUser } from "./auth.service.js";
+
+export const logout = async (req, res) => {
+  try {
+    const token = req.cookies.refreshToken;
+
+    if (!token) {
+      return res.status(200).json({ message: "Already logged out" });
+    }
+
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_REFRESH_SECRET
+    );
+
+    await logoutUser(decoded.userId);
+
+    res
+      .clearCookie("refreshToken")
+      .status(200)
+      .json({ message: "Logged out successfully" });
+  } catch (error) {
+    res.status(400).json({ message: "Logout failed" });
+  }
+};
+

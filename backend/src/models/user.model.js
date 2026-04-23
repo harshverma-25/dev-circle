@@ -25,7 +25,12 @@ const userSchema = new mongoose.Schema(
       type: String,
       enum: ["local", "google"],
       default: "local"
-    }
+    },
+
+    refreshToken: {
+  type: String,
+  default: null
+}
   },
   { timestamps: true }
 );

@@ -30,6 +30,9 @@ export const registerUser = async (data) => {
   const accessToken = generateAccessToken(user);
   const refreshToken = generateRefreshToken(user);
 
+  user.refreshToken = refreshToken;
+    await user.save();
+
   return { user, accessToken, refreshToken };
 };
 
@@ -51,6 +54,9 @@ export const loginUser = async (data) => {
   // generate tokens
   const accessToken = generateAccessToken(user);
   const refreshToken = generateRefreshToken(user);
+  
+  user.refreshToken = refreshToken;
+    await user.save();
 
   return { user, accessToken, refreshToken };
 };
@@ -67,16 +73,25 @@ export const refreshAccessToken = async (refreshToken) => {
       refreshToken,
       process.env.JWT_REFRESH_SECRET
     );
-  } catch (error) {
+  } catch {
     throw new Error("Invalid refresh token");
   }
 
+  // check in DB
+  const user = await User.findById(decoded.userId);
+
+  if (!user || user.refreshToken !== refreshToken) {
+    throw new Error("Token not valid");
+  }
+
   // generate new access token
-  const accessToken = jwt.sign(
-    { userId: decoded.userId },
-    process.env.JWT_ACCESS_SECRET,
-    { expiresIn: "15m" }
-  );
+  const accessToken = generateAccessToken(user);
 
   return accessToken;
+};
+
+export const logoutUser = async (userId) => {
+  await User.findByIdAndUpdate(userId, {
+    refreshToken: null
+  });
 };

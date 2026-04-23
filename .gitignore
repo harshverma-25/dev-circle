@@ -1,0 +1,26 @@
+# Node modules
+node_modules/
+
+# Env files
+.env
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+
+# Build folders
+dist/
+build/
+
+# Coverage
+coverage/
+
+# Vercel / Next
+.next/
+
+# Misc
+*.local

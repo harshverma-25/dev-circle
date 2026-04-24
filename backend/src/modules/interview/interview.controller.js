@@ -1,4 +1,5 @@
-import { createInterview } from "./interview.service.js";
+import { createInterview, getInterviews, applyToInterview } from "./interview.service.js";
+
 
 export const createInterviewController = async (req, res) => {
   try {
@@ -15,7 +16,7 @@ export const createInterviewController = async (req, res) => {
   }
 };
 
-import { getInterviews } from "./interview.service.js";
+
 
 export const getInterviewsController = async (req, res) => {
   try {
@@ -24,6 +25,24 @@ export const getInterviewsController = async (req, res) => {
     res.status(200).json({
       success: true,
       interviews
+    });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+
+
+export const applyToInterviewController = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { id } = req.params;
+
+    const application = await applyToInterview(id, userId);
+
+    res.status(200).json({
+      success: true,
+      application
     });
   } catch (error) {
     res.status(400).json({ message: error.message });

@@ -3,6 +3,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import authRoutes from "./modules/auth/auth.routes.js";
 import { protect } from "./middleware/auth.middleware.js";
+import interviewRoutes from "./modules/interview/interview.routes.js";
 
 const app = express();
 
@@ -23,6 +24,7 @@ app.get("/api/test", protect, (req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/interview", interviewRoutes);
 
 
 export default app;

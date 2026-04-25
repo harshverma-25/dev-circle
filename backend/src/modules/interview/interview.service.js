@@ -60,3 +60,31 @@ export const applyToInterview = async (interviewId, userId) => {
 
   return application;
 };
+
+export const startInterview = async (interviewId, userId) => {
+  const interview = await Interview.findById(interviewId);
+
+  if (!interview) {
+    throw new Error("Interview not found");
+  }
+
+  // check ownership
+  if (interview.createdBy.toString() !== userId) {
+    throw new Error("Not authorized");
+  }
+
+  // check already started
+  if (interview.isStarted) {
+    throw new Error("Interview already started");
+  }
+
+  // start interview
+  interview.isStarted = true;
+  interview.startedAt = new Date();
+  interview.roomName = interview._id.toString();
+
+  await interview.save();
+
+  return interview;
+};
+

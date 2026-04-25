@@ -1,6 +1,7 @@
 import cron from "node-cron";
 import Interview from "../models/interview.model.js";
 import Application from "../models/application.model.js";
+import Participant from "../models/participant.model.js";
 
 const deleteExpiredInterviews = async () => {
   try {
@@ -26,7 +27,21 @@ const deleteExpiredInterviews = async () => {
   }
 };
 
+const markInactiveParticipants = async () => {
+  const threshold = new Date(Date.now() - 60 * 1000); // 1 min
+
+  await Participant.updateMany(
+    {
+      lastSeen: { $lt: threshold }
+    },
+    {
+      isActive: false
+    }
+  );
+};
+
 // run every 10 minutes
 cron.schedule("*/10 * * * *", deleteExpiredInterviews);
+cron.schedule("*/1 * * * *", markInactiveParticipants);
 
 export default deleteExpiredInterviews;

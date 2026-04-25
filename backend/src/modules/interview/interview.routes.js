@@ -14,5 +14,6 @@ router.get("/join/:id", protect, joinInterviewController);
 router.post("/leave/:id", protect, leaveInterviewController);
 router.post("/kick/:id/:userId", protect, kickParticipantController);
 router.get("/participants/:id", protect, getParticipantsController);
+router.post("/heartbeat/:id", protect, heartbeatController);
 
 export default router;

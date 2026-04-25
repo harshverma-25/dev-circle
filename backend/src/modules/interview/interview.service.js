@@ -98,8 +98,11 @@ export const joinInterview = async (interviewId, userId) => {
   // ✅ TRACK PARTICIPANT HERE (THIS WAS YOUR QUESTION)
   await Participant.findOneAndUpdate(
     { interviewId, userId },
-    { isActive: true },
-    { upsert: true }
+    {
+      isActive: true,
+      lastSeen: new Date()
+    },
+    { upsert: true, new: true }
   );
 
   // generate token
@@ -187,4 +190,14 @@ export const getParticipants = async (interviewId) => {
     interviewId,
     isActive: true
   }).populate("userId", "name email");
+};
+
+export const updateHeartbeat = async (interviewId, userId) => {
+  await Participant.findOneAndUpdate(
+    { interviewId, userId },
+    {
+      lastSeen: new Date(),
+      isActive: true
+    }
+  );
 };

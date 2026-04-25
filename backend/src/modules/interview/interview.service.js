@@ -1,5 +1,7 @@
 import Interview from "../../models/interview.model.js";
 import Application from "../../models/application.model.js";
+import { generateLiveKitToken } from "../../services/livekit.service.js";
+
 
 export const createInterview = async (data, userId) => {
   const { title, scheduledAt, duration, maxParticipants } = data;
@@ -61,6 +63,58 @@ export const applyToInterview = async (interviewId, userId) => {
   return application;
 };
 
+export const joinInterview = async (interviewId, userId) => {
+  const interview = await Interview.findById(interviewId);
+
+  if (!interview) {
+    throw new Error("Interview not found");
+  }
+
+  // check started
+  if (!interview.isStarted) {
+    throw new Error("Interview not started yet");
+  }
+
+  // check applied
+  const application = await Application.findOne({
+    interviewId,
+    userId
+  });
+
+  if (!application) {
+    throw new Error("You have not applied");
+  }
+
+  // check capacity (use ACTIVE participants now)
+  const activeCount = await Participant.countDocuments({
+    interviewId,
+    isActive: true
+  });
+
+  if (activeCount >= interview.maxParticipants) {
+    throw new Error("Room is full");
+  }
+
+  // ✅ TRACK PARTICIPANT HERE (THIS WAS YOUR QUESTION)
+  await Participant.findOneAndUpdate(
+    { interviewId, userId },
+    { isActive: true },
+    { upsert: true }
+  );
+
+  // generate token
+  const token = generateLiveKitToken(
+    interview.roomName,
+    userId
+  );
+
+  return {
+    token,
+    roomName: interview.roomName,
+    url: process.env.LIVEKIT_URL
+  };
+};
+
 export const startInterview = async (interviewId, userId) => {
   const interview = await Interview.findById(interviewId);
 
@@ -88,3 +142,49 @@ export const startInterview = async (interviewId, userId) => {
   return interview;
 };
 
+export const leaveInterview = async (interviewId, userId) => {
+  const participant = await Participant.findOne({
+    interviewId,
+    userId
+  });
+
+  if (!participant) {
+    throw new Error("Not in interview");
+  }
+
+  participant.isActive = false;
+  await participant.save();
+
+  return true;
+};
+
+export const kickParticipant = async (interviewId, userId, hostId) => {
+  const interview = await Interview.findById(interviewId);
+
+  if (!interview) throw new Error("Interview not found");
+
+  if (interview.createdBy.toString() !== hostId) {
+    throw new Error("Not authorized");
+  }
+
+  const participant = await Participant.findOne({
+    interviewId,
+    userId
+  });
+
+  if (!participant) {
+    throw new Error("User not in interview");
+  }
+
+  participant.isActive = false;
+  await participant.save();
+
+  return true;
+};
+
+export const getParticipants = async (interviewId) => {
+  return await Participant.find({
+    interviewId,
+    isActive: true
+  }).populate("userId", "name email");
+};

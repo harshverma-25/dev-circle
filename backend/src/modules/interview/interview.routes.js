@@ -11,5 +11,8 @@ router.get("/list", getInterviewsController);
 router.post("/apply/:id", protect, applyToInterviewController);
 router.post("/start/:id", protect, startInterviewController);
 router.get("/join/:id", protect, joinInterviewController);
+router.post("/leave/:id", protect, leaveInterviewController);
+router.post("/kick/:id/:userId", protect, kickParticipantController);
+router.get("/participants/:id", protect, getParticipantsController);
 
 export default router;

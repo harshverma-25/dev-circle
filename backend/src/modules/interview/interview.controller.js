@@ -77,3 +77,49 @@ export const joinInterviewController = async (req, res) => {
   }
 };
 
+export const leaveInterviewController = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { id } = req.params;
+
+    await leaveInterview(id, userId);
+
+    res.status(200).json({
+      success: true,
+      message: "Left interview"
+    });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+export const kickParticipantController = async (req, res) => {
+  try {
+    const hostId = req.user.userId;
+    const { id, userId } = req.params;
+
+    await kickParticipant(id, userId, hostId);
+
+    res.status(200).json({
+      success: true,
+      message: "User kicked"
+    });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+export const getParticipantsController = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const participants = await getParticipants(id);
+
+    res.status(200).json({
+      success: true,
+      participants
+    });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};

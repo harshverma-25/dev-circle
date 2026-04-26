@@ -3,6 +3,7 @@ import { body, param } from "express-validator";
 import {
   createInterviewController,
   getInterviewsController,
+  getInterviewByIdController,
   applyToInterviewController,
   startInterviewController,
   joinInterviewController,
@@ -40,6 +41,7 @@ const userIdValidation = [
 
 router.post("/create", protect, createInterviewRules, validate, createInterviewController);
 router.get("/list", getInterviewsController);
+router.get("/:id", interviewIdValidation, validate, getInterviewByIdController);
 router.post("/apply/:id", protect, interviewIdValidation, validate, applyToInterviewController);
 router.post("/start/:id", protect, interviewIdValidation, validate, startInterviewController);
 router.get("/join/:id", protect, interviewIdValidation, validate, joinInterviewController);

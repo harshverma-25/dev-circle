@@ -29,6 +29,29 @@ const joinInterview = async (interviewId) => {
   return data; // { success, token, roomName, url }
 };
 
+const startInterview = async (interviewId) => {
+  const { data } = await api.post(`/api/interview/start/${interviewId}`);
+  return data.interview;
+};
+
+// ─── Fetch Single Interview ─────────────────────────────────────────────
+
+const fetchInterview = async (interviewId) => {
+  const { data } = await api.get(`/api/interview/${interviewId}`);
+  return data.interview;
+};
+
+/**
+ * Fetch single interview details (used in room page)
+ */
+export function useInterview(interviewId) {
+  return useQuery({
+    queryKey: QUERY_KEYS.interview(interviewId),
+    queryFn: () => fetchInterview(interviewId),
+    enabled: !!interviewId, // prevents unnecessary calls
+  });
+}
+
 // ─── Hooks ───────────────────────────────────────────────────────────────────
 
 /**
@@ -68,6 +91,9 @@ export function useCreateInterview() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.interviews });
     },
+    onError: (error) => {
+      console.error("[useCreateInterview] Error:", error.response?.data || error.message);
+    },
   });
 }
 
@@ -79,5 +105,20 @@ export function useCreateInterview() {
 export function useJoinInterview() {
   return useMutation({
     mutationFn: joinInterview,
+  });
+}
+
+/**
+ * Start an interview (host only).
+ * Automatically invalidates the interview query after success.
+ */
+export function useStartInterview() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: startInterview,
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.interview(id) });
+    },
   });
 }

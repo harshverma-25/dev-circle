@@ -1,3 +1,4 @@
+import Interview from "../../models/interview.model.js";
 import {
   createInterview,
   getInterviews,
@@ -33,6 +34,29 @@ export const getInterviewsController = async (req, res, next) => {
     res.status(200).json({
       success: true,
       interviews
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getInterviewByIdController = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const interview = await Interview.findById(id)
+      .populate("createdBy", "name email");
+
+    if (!interview) {
+      return res.status(404).json({
+        success: false,
+        message: "Interview not found"
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      interview
     });
   } catch (error) {
     next(error);

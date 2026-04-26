@@ -6,18 +6,27 @@ import Sidebar from "./Sidebar";
 export default function Layout({ children }) {
   return (
     <div className="bg-[#0b0b0f] text-white min-h-screen overflow-x-hidden">
-      
+
+      {/* NAVBAR */}
       <Navbar />
-      <Sidebar />
 
-      {/* MAIN CONTENT */}
-      <main className="md:ml-[260px] pt-16">
-        
-        <div className="max-w-7xl mx-auto px-6 py-8">
-          {children}
-        </div>
+      {/* BODY */}
+      <div className="flex">
 
-      </main>
+        {/* SIDEBAR */}
+        <Sidebar />
+
+        {/* MAIN CONTENT */}
+        <main className="flex-1 pt-16 md:ml-[260px]">
+          
+          <div className="max-w-7xl mx-auto px-6 py-8">
+            {children}
+          </div>
+
+        </main>
+
+      </div>
+
     </div>
   );
 }

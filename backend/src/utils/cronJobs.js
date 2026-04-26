@@ -16,6 +16,7 @@ const deleteExpiredInterviews = async () => {
 
     for (const interview of expiredInterviews) {
       await Application.deleteMany({ interviewId: interview._id });
+      await Participant.deleteMany({ interviewId: interview._id });
       await Interview.findByIdAndDelete(interview._id);
     }
 

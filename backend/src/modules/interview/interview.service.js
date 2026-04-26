@@ -1,5 +1,6 @@
 import Interview from "../../models/interview.model.js";
 import Application from "../../models/application.model.js";
+import Participant from "../../models/participant.model.js";
 import { generateLiveKitToken } from "../../services/livekit.service.js";
 
 
@@ -105,8 +106,8 @@ export const joinInterview = async (interviewId, userId) => {
     { upsert: true, new: true }
   );
 
-  // generate token
-  const token = generateLiveKitToken(
+  // generate LiveKit token (async in SDK v2+)
+  const token = await generateLiveKitToken(
     interview.roomName,
     userId
   );

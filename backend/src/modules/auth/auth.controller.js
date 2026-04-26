@@ -1,8 +1,12 @@
-import { registerUser } from "./auth.service.js";
-import { loginUser } from "./auth.service.js";
-import { refreshAccessToken } from "./auth.service.js";
+import jwt from "jsonwebtoken";
+import {
+  registerUser,
+  loginUser,
+  refreshAccessToken,
+  logoutUser
+} from "./auth.service.js";
 
-export const register = async (req, res) => {
+export const register = async (req, res, next) => {
   try {
     const result = await registerUser(req.body);
 
@@ -23,11 +27,11 @@ export const register = async (req, res) => {
         }
       });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    next(error);
   }
 };
 
-export const login = async (req, res) => {
+export const login = async (req, res, next) => {
   try {
     const result = await loginUser(req.body);
 
@@ -48,11 +52,11 @@ export const login = async (req, res) => {
         }
       });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    next(error);
   }
 };
 
-export const refreshToken = async (req, res) => {
+export const refreshToken = async (req, res, next) => {
   try {
     const token = req.cookies.refreshToken;
 
@@ -63,13 +67,11 @@ export const refreshToken = async (req, res) => {
       accessToken
     });
   } catch (error) {
-    res.status(401).json({ message: error.message });
+    next(error);
   }
 };
 
-import { logoutUser } from "./auth.service.js";
-
-export const logout = async (req, res) => {
+export const logout = async (req, res, next) => {
   try {
     const token = req.cookies.refreshToken;
 
@@ -89,7 +91,7 @@ export const logout = async (req, res) => {
       .status(200)
       .json({ message: "Logged out successfully" });
   } catch (error) {
-    res.status(400).json({ message: "Logout failed" });
+    next(error);
   }
 };
 

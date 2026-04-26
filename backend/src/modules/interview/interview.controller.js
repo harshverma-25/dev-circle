@@ -1,7 +1,17 @@
-import { createInterview, getInterviews, applyToInterview, startInterview, joinInterview } from "./interview.service.js";
+import {
+  createInterview,
+  getInterviews,
+  applyToInterview,
+  startInterview,
+  joinInterview,
+  leaveInterview,
+  kickParticipant,
+  getParticipants,
+  updateHeartbeat
+} from "./interview.service.js";
 
 
-export const createInterviewController = async (req, res) => {
+export const createInterviewController = async (req, res, next) => {
   try {
     const userId = req.user.userId;
 
@@ -12,11 +22,11 @@ export const createInterviewController = async (req, res) => {
       interview
     });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    next(error);
   }
 };
 
-export const getInterviewsController = async (req, res) => {
+export const getInterviewsController = async (req, res, next) => {
   try {
     const interviews = await getInterviews();
 
@@ -25,11 +35,11 @@ export const getInterviewsController = async (req, res) => {
       interviews
     });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    next(error);
   }
 };
 
-export const applyToInterviewController = async (req, res) => {
+export const applyToInterviewController = async (req, res, next) => {
   try {
     const userId = req.user.userId;
     const { id } = req.params;
@@ -41,11 +51,11 @@ export const applyToInterviewController = async (req, res) => {
       application
     });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    next(error);
   }
 };
 
-export const startInterviewController = async (req, res) => {
+export const startInterviewController = async (req, res, next) => {
   try {
     const userId = req.user.userId;
     const { id } = req.params;
@@ -57,11 +67,11 @@ export const startInterviewController = async (req, res) => {
       interview
     });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    next(error);
   }
 };
 
-export const joinInterviewController = async (req, res) => {
+export const joinInterviewController = async (req, res, next) => {
   try {
     const userId = req.user.userId;
     const { id } = req.params;
@@ -73,11 +83,11 @@ export const joinInterviewController = async (req, res) => {
       ...data
     });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    next(error);
   }
 };
 
-export const leaveInterviewController = async (req, res) => {
+export const leaveInterviewController = async (req, res, next) => {
   try {
     const userId = req.user.userId;
     const { id } = req.params;
@@ -89,11 +99,11 @@ export const leaveInterviewController = async (req, res) => {
       message: "Left interview"
     });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    next(error);
   }
 };
 
-export const kickParticipantController = async (req, res) => {
+export const kickParticipantController = async (req, res, next) => {
   try {
     const hostId = req.user.userId;
     const { id, userId } = req.params;
@@ -105,11 +115,11 @@ export const kickParticipantController = async (req, res) => {
       message: "User kicked"
     });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    next(error);
   }
 };
 
-export const getParticipantsController = async (req, res) => {
+export const getParticipantsController = async (req, res, next) => {
   try {
     const { id } = req.params;
 
@@ -120,11 +130,11 @@ export const getParticipantsController = async (req, res) => {
       participants
     });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    next(error);
   }
 };
 
-export const heartbeatController = async (req, res) => {
+export const heartbeatController = async (req, res, next) => {
   try {
     const userId = req.user.userId;
     const { id } = req.params;
@@ -133,6 +143,6 @@ export const heartbeatController = async (req, res) => {
 
     res.status(200).json({ success: true });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    next(error);
   }
 };

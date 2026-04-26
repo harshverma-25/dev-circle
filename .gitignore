@@ -1,8 +1,12 @@
 # Node modules
 node_modules/
 
-# Env files
+# Env files (never commit secrets)
 .env
+.env.local
+.env.*.local
+backend/.env
+frontend/.env.local
 
 # Logs
 logs

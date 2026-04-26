@@ -9,7 +9,7 @@ export default function Navbar() {
   return (
     <nav className="fixed top-0 w-full h-16 z-50 bg-[#121212]/90 backdrop-blur-xl border-b border-white/10 flex justify-between items-center px-6">
       <Link href="/" className="text-xl font-bold tracking-tight text-white font-h2">
-        DevCircle
+        DevCir
       </Link>
 
       <div className="flex items-center gap-lg">
@@ -36,4 +36,4 @@ export default function Navbar() {
       </div>
     </nav>
   );
-}
+}

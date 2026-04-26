@@ -13,7 +13,9 @@ export const register = async (req, res, next) => {
     res
       .cookie("refreshToken", result.refreshToken, {
         httpOnly: true,
-        secure: false
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
       })
       .status(201)
       .json({
@@ -38,8 +40,9 @@ export const login = async (req, res, next) => {
     res
       .cookie("refreshToken", result.refreshToken, {
         httpOnly: true,
-        secure: false,
-        sameSite: "lax"
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
       })
       .status(200)
       .json({

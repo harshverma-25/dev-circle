@@ -1,5 +1,5 @@
 import express from "express";
-import { body } from "express-validator";
+import { body, param } from "express-validator";
 import {
   createInterviewController,
   getInterviewsController,
@@ -28,14 +28,24 @@ const createInterviewRules = [
     .withMessage("maxParticipants must be between 2 and 20")
 ];
 
+// Reusable validation for interview ID parameter
+const interviewIdValidation = [
+  param("id").isMongoId().withMessage("Invalid interview ID")
+];
+
+// Validation for user ID parameter (used in kick route)
+const userIdValidation = [
+  param("userId").isMongoId().withMessage("Invalid user ID")
+];
+
 router.post("/create", protect, createInterviewRules, validate, createInterviewController);
 router.get("/list", getInterviewsController);
-router.post("/apply/:id", protect, applyToInterviewController);
-router.post("/start/:id", protect, startInterviewController);
-router.get("/join/:id", protect, joinInterviewController);
-router.post("/leave/:id", protect, leaveInterviewController);
-router.post("/kick/:id/:userId", protect, kickParticipantController);
-router.get("/participants/:id", protect, getParticipantsController);
-router.post("/heartbeat/:id", protect, heartbeatController);
+router.post("/apply/:id", protect, interviewIdValidation, validate, applyToInterviewController);
+router.post("/start/:id", protect, interviewIdValidation, validate, startInterviewController);
+router.get("/join/:id", protect, interviewIdValidation, validate, joinInterviewController);
+router.post("/leave/:id", protect, interviewIdValidation, validate, leaveInterviewController);
+router.post("/kick/:id/:userId", protect, interviewIdValidation, userIdValidation, validate, kickParticipantController);
+router.get("/participants/:id", protect, interviewIdValidation, validate, getParticipantsController);
+router.post("/heartbeat/:id", protect, interviewIdValidation, validate, heartbeatController);
 
-export default router;
+export default router;

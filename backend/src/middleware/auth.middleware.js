@@ -1,12 +1,13 @@
 import jwt from "jsonwebtoken";
 import User from "../models/user.model.js";
+import { AppError } from "../utils/AppError.js";
 
 export const protect = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ message: "Not authorized" });
+      return next(new AppError("Not authorized", 401));
     }
 
     const token = authHeader.split(" ")[1];
@@ -17,7 +18,7 @@ export const protect = async (req, res, next) => {
     const user = await User.findById(decoded.userId).select("-password -refreshToken");
 
     if (!user) {
-      return res.status(401).json({ message: "User no longer exists" });
+      return next(new AppError("User no longer exists", 401));
     }
 
     // Attach a consistent shape: { userId, name, email }
@@ -29,6 +30,6 @@ export const protect = async (req, res, next) => {
 
     next();
   } catch (error) {
-    res.status(401).json({ message: "Invalid token" });
+    next(error);
   }
 };

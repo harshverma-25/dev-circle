@@ -9,8 +9,8 @@ export default function Sidebar() {
   return (
     <aside className="fixed left-0 top-16 w-[260px] h-[calc(100vh-64px)] z-40 bg-[#121212]/95 backdrop-blur-xl border-r border-white/10 flex-col py-6 space-y-2 hidden md:flex">
       <div className="px-6 mb-8">
-        <div className="text-label-caps text-zinc-500 uppercase tracking-widest mb-xs">Navigation</div>
-        <div className="text-body-sm font-medium text-primary">Interview Platform</div>
+        <div className="text-label-caps text-zinc-500 uppercase tracking-widest mb-xs">Naation</div>
+        <div className="text-body-sm font-medium text-primary">Interm</div>
       </div>
 
       <Link

@@ -7,24 +7,25 @@ const api = axios.create({
 });
 
 // ─── Request Interceptor ────────────────────────────────────────────────────
-// Attach the access token from Zustand store (or localStorage as fallback)
+// Attach the access token from Zustand store
 // We import dynamically to avoid circular dependency issues with the store.
 api.interceptors.request.use(
-  (config) => {
-    // Read raw zustand persisted state from localStorage
-    let token = null;
-    try {
-      const raw = localStorage.getItem("auth-storage");
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        token = parsed?.state?.accessToken ?? null;
-      }
-    } catch {
-      // localStorage may not be available in SSR; silently skip
+  async (config) => {
+    // Skip token attachment during SSR
+    if (typeof window === "undefined") {
+      return config;
     }
 
-    if (token) {
-      config.headers["Authorization"] = `Bearer ${token}`;
+    try {
+      // Dynamically import Zustand store to get the current token
+      const useAuthStore = (await import("../store/useAuthStore")).default;
+      const token = useAuthStore.getState().accessToken;
+
+      if (token) {
+        config.headers["Authorization"] = `Bearer ${token}`;
+      }
+    } catch {
+      // Silently skip if store is not available
     }
 
     return config;

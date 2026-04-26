@@ -1,6 +1,7 @@
 import Interview from "../../models/interview.model.js";
 import Application from "../../models/application.model.js";
 import Participant from "../../models/participant.model.js";
+import { AppError } from "../../utils/AppError.js";
 import { generateLiveKitToken } from "../../services/livekit.service.js";
 
 
@@ -30,12 +31,12 @@ export const applyToInterview = async (interviewId, userId) => {
   // check interview exists
   const interview = await Interview.findById(interviewId);
   if (!interview) {
-    throw new Error("Interview not found");
+    throw new AppError("Interview not found", 404);
   }
 
   // check if already started
   if (interview.isStarted) {
-    throw new Error("Interview already started");
+    throw new AppError("Interview already started", 409);
   }
 
   // check duplicate (extra safety)
@@ -45,14 +46,16 @@ export const applyToInterview = async (interviewId, userId) => {
   });
 
   if (existing) {
-    throw new Error("Already applied");
+    throw new AppError("Already applied", 409);
   }
 
-  // check participant count
-  const count = await Application.countDocuments({ interviewId });
+  // check capacity using APPLICATION count (prevent over-application)
+  const applicationCount = await Application.countDocuments({
+    interviewId
+  });
 
-  if (count >= interview.maxParticipants) {
-    throw new Error("Interview is full");
+  if (applicationCount >= interview.maxParticipants) {
+    throw new AppError("Interview is full", 409);
   }
 
   // create application
@@ -68,12 +71,12 @@ export const joinInterview = async (interviewId, userId) => {
   const interview = await Interview.findById(interviewId);
 
   if (!interview) {
-    throw new Error("Interview not found");
+    throw new AppError("Interview not found", 404);
   }
 
   // check started
   if (!interview.isStarted) {
-    throw new Error("Interview not started yet");
+    throw new AppError("Interview not started yet", 400);
   }
 
   // check applied
@@ -83,7 +86,7 @@ export const joinInterview = async (interviewId, userId) => {
   });
 
   if (!application) {
-    throw new Error("You have not applied");
+    throw new AppError("You have not applied", 400);
   }
 
   // check capacity (use ACTIVE participants now)
@@ -93,7 +96,7 @@ export const joinInterview = async (interviewId, userId) => {
   });
 
   if (activeCount >= interview.maxParticipants) {
-    throw new Error("Room is full");
+    throw new AppError("Room is full", 409);
   }
 
   // ✅ TRACK PARTICIPANT HERE (THIS WAS YOUR QUESTION)
@@ -123,17 +126,17 @@ export const startInterview = async (interviewId, userId) => {
   const interview = await Interview.findById(interviewId);
 
   if (!interview) {
-    throw new Error("Interview not found");
+    throw new AppError("Interview not found", 404);
   }
 
   // check ownership
   if (interview.createdBy.toString() !== userId) {
-    throw new Error("Not authorized");
+    throw new AppError("Not authorized", 403);
   }
 
   // check already started
   if (interview.isStarted) {
-    throw new Error("Interview already started");
+    throw new AppError("Interview already started", 409);
   }
 
   // start interview
@@ -153,7 +156,7 @@ export const leaveInterview = async (interviewId, userId) => {
   });
 
   if (!participant) {
-    throw new Error("Not in interview");
+    throw new AppError("Not in interview", 400);
   }
 
   participant.isActive = false;
@@ -165,10 +168,10 @@ export const leaveInterview = async (interviewId, userId) => {
 export const kickParticipant = async (interviewId, userId, hostId) => {
   const interview = await Interview.findById(interviewId);
 
-  if (!interview) throw new Error("Interview not found");
+  if (!interview) throw new AppError("Interview not found", 404);
 
   if (interview.createdBy.toString() !== hostId) {
-    throw new Error("Not authorized");
+    throw new AppError("Not authorized", 403);
   }
 
   const participant = await Participant.findOne({
@@ -177,7 +180,7 @@ export const kickParticipant = async (interviewId, userId, hostId) => {
   });
 
   if (!participant) {
-    throw new Error("User not in interview");
+    throw new AppError("User not in interview", 404);
   }
 
   participant.isActive = false;

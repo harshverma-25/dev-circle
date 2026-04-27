@@ -5,6 +5,8 @@ import { AppError } from "../../utils/AppError.js";
 import { generateLiveKitToken } from "../../services/livekit.service.js";
 
 
+// ─── Create Interview ────────────────────────────────────────────────────────
+
 export const createInterview = async (data, userId) => {
   const { title, scheduledAt, duration, maxParticipants } = data;
 
@@ -19,6 +21,9 @@ export const createInterview = async (data, userId) => {
   return interview;
 };
 
+
+// ─── Get All Interviews ──────────────────────────────────────────────────────
+
 export const getInterviews = async () => {
   const interviews = await Interview.find()
     .sort({ createdAt: -1 })
@@ -27,161 +32,170 @@ export const getInterviews = async () => {
   return interviews;
 };
 
-export const applyToInterview = async (interviewId, userId) => {
-  // check interview exists
+
+// ─── Get Single Interview ────────────────────────────────────────────────────
+
+export const getInterviewById = async (interviewId) => {
+  const interview = await Interview.findById(interviewId)
+    .populate("createdBy", "name email");
+
+  if (!interview) throw new AppError("Interview not found", 404);
+
+  return interview;
+};
+
+
+// ─── Apply to Interview ──────────────────────────────────────────────────────
+
+export const applyToInterview = async (interviewId, userId, resumeData) => {
+  const { resumeUrl, resumeType = "link", cloudinaryPublicId = null } = resumeData;
+
   const interview = await Interview.findById(interviewId);
-  if (!interview) {
-    throw new AppError("Interview not found", 404);
-  }
+  if (!interview) throw new AppError("Interview not found", 404);
 
-  // check if already started
-  if (interview.isStarted) {
-    throw new AppError("Interview already started", 409);
-  }
+  if (interview.isStarted) throw new AppError("Interview already started", 409);
 
-  // check duplicate (extra safety)
-  const existing = await Application.findOne({
-    interviewId,
-    userId
-  });
+  // Prevent double applying
+  const existing = await Application.findOne({ interviewId, userId });
+  if (existing) throw new AppError("You have already applied", 409);
 
-  if (existing) {
-    throw new AppError("Already applied", 409);
-  }
-
-  // check capacity using APPLICATION count (prevent over-application)
-  const applicationCount = await Application.countDocuments({
-    interviewId
-  });
-
+  // Prevent over-capacity
+  const applicationCount = await Application.countDocuments({ interviewId });
   if (applicationCount >= interview.maxParticipants) {
     throw new AppError("Interview is full", 409);
   }
 
-  // create application
+  // Validate resume
+  if (!resumeUrl) throw new AppError("Resume is required", 400);
+
   const application = await Application.create({
     interviewId,
-    userId
+    userId,
+    resumeUrl,
+    resumeType,
+    cloudinaryPublicId,
+    status: "pending"
   });
 
   return application;
 };
 
-export const joinInterview = async (interviewId, userId) => {
+
+// ─── Get Applications (Host Only) ────────────────────────────────────────────
+
+export const getApplications = async (interviewId, hostId) => {
   const interview = await Interview.findById(interviewId);
-
-  if (!interview) {
-    throw new AppError("Interview not found", 404);
-  }
-
-  // check started
-  if (!interview.isStarted) {
-    throw new AppError("Interview not started yet", 400);
-  }
-
-  // check applied
-  const application = await Application.findOne({
-    interviewId,
-    userId
-  });
-
-  if (!application) {
-    throw new AppError("You have not applied", 400);
-  }
-
-  // check capacity (use ACTIVE participants now)
-  const activeCount = await Participant.countDocuments({
-    interviewId,
-    isActive: true
-  });
-
-  if (activeCount >= interview.maxParticipants) {
-    throw new AppError("Room is full", 409);
-  }
-
-  // ✅ TRACK PARTICIPANT HERE (THIS WAS YOUR QUESTION)
-  await Participant.findOneAndUpdate(
-    { interviewId, userId },
-    {
-      isActive: true,
-      lastSeen: new Date()
-    },
-    { upsert: true, new: true }
-  );
-
-  // generate LiveKit token (async in SDK v2+)
-  const token = await generateLiveKitToken(
-    interview.roomName,
-    userId
-  );
-
-  return {
-    token,
-    roomName: interview.roomName,
-    url: process.env.LIVEKIT_URL
-  };
-};
-
-export const startInterview = async (interviewId, userId) => {
-  const interview = await Interview.findById(interviewId);
-
-  if (!interview) {
-    throw new AppError("Interview not found", 404);
-  }
-
-  // check ownership
-  if (interview.createdBy.toString() !== userId) {
-    throw new AppError("Not authorized", 403);
-  }
-
-  // check already started
-  if (interview.isStarted) {
-    throw new AppError("Interview already started", 409);
-  }
-
-  // start interview
-  interview.isStarted = true;
-  interview.startedAt = new Date();
-  interview.roomName = interview._id.toString();
-
-  await interview.save();
-
-  return interview;
-};
-
-export const leaveInterview = async (interviewId, userId) => {
-  const participant = await Participant.findOne({
-    interviewId,
-    userId
-  });
-
-  if (!participant) {
-    throw new AppError("Not in interview", 400);
-  }
-
-  participant.isActive = false;
-  await participant.save();
-
-  return true;
-};
-
-export const kickParticipant = async (interviewId, userId, hostId) => {
-  const interview = await Interview.findById(interviewId);
-
   if (!interview) throw new AppError("Interview not found", 404);
 
   if (interview.createdBy.toString() !== hostId) {
     throw new AppError("Not authorized", 403);
   }
 
-  const participant = await Participant.findOne({
-    interviewId,
-    userId
-  });
+  const applications = await Application.find({ interviewId })
+    .populate("userId", "name email")
+    .sort({ createdAt: -1 });
 
-  if (!participant) {
-    throw new AppError("User not in interview", 404);
+  return applications;
+};
+
+
+// ─── Get My Application (Candidate) ─────────────────────────────────────────
+
+export const getMyApplication = async (interviewId, userId) => {
+  const application = await Application.findOne({ interviewId, userId });
+  return application; // null means not applied yet
+};
+
+
+// ─── Update Application Status (Host Only) ───────────────────────────────────
+
+export const updateApplicationStatus = async (applicationId, status, hostId) => {
+  const application = await Application.findById(applicationId);
+  if (!application) throw new AppError("Application not found", 404);
+
+  const interview = await Interview.findById(application.interviewId);
+  if (!interview) throw new AppError("Interview not found", 404);
+
+  if (interview.createdBy.toString() !== hostId) {
+    throw new AppError("Not authorized", 403);
   }
+
+  application.status = status;
+  await application.save();
+
+  return application;
+};
+
+
+// ─── Start Interview (Host Only) ──────────────────────────────────────────────
+
+export const startInterview = async (interviewId, userId) => {
+  const interview = await Interview.findById(interviewId);
+  if (!interview) throw new AppError("Interview not found", 404);
+
+  if (interview.createdBy.toString() !== userId) {
+    throw new AppError("Not authorized", 403);
+  }
+
+  if (interview.isStarted) throw new AppError("Interview already started", 409);
+
+  interview.isStarted = true;
+  interview.startedAt = new Date();
+  interview.roomName  = interview._id.toString();
+
+  await interview.save();
+
+  return interview;
+};
+
+
+// ─── Join Interview ──────────────────────────────────────────────────────────
+
+export const joinInterview = async (interviewId, userId) => {
+  const interview = await Interview.findById(interviewId);
+  if (!interview) throw new AppError("Interview not found", 404);
+
+  if (!interview.isStarted) throw new AppError("Interview has not started yet", 400);
+
+  const isHost = interview.createdBy.toString() === userId;
+
+  if (!isHost) {
+    // Candidate must have an accepted application
+    const application = await Application.findOne({ interviewId, userId });
+
+    if (!application) throw new AppError("You have not applied for this interview", 400);
+
+    if (application.status === "rejected") {
+      throw new AppError("Your application was not accepted", 403);
+    }
+
+    if (application.status === "pending") {
+      throw new AppError("Your application is still pending review", 403);
+    }
+  }
+
+  // Track active participants
+  await Participant.findOneAndUpdate(
+    { interviewId, userId },
+    { isActive: true, lastSeen: new Date() },
+    { upsert: true, new: true }
+  );
+
+  const token = await generateLiveKitToken(interview.roomName, userId);
+
+  return {
+    token,
+    roomName: interview.roomName,
+    url: process.env.LIVEKIT_URL,
+  };
+};
+
+
+// ─── Leave Interview ──────────────────────────────────────────────────────────
+
+export const leaveInterview = async (interviewId, userId) => {
+  const participant = await Participant.findOne({ interviewId, userId });
+  if (!participant) throw new AppError("Not in interview", 400);
 
   participant.isActive = false;
   await participant.save();
@@ -189,19 +203,40 @@ export const kickParticipant = async (interviewId, userId, hostId) => {
   return true;
 };
 
-export const getParticipants = async (interviewId) => {
-  return await Participant.find({
-    interviewId,
-    isActive: true
-  }).populate("userId", "name email");
+
+// ─── Kick Participant (Host Only) ────────────────────────────────────────────
+
+export const kickParticipant = async (interviewId, userId, hostId) => {
+  const interview = await Interview.findById(interviewId);
+  if (!interview) throw new AppError("Interview not found", 404);
+
+  if (interview.createdBy.toString() !== hostId) {
+    throw new AppError("Not authorized", 403);
+  }
+
+  const participant = await Participant.findOne({ interviewId, userId });
+  if (!participant) throw new AppError("User not in interview", 404);
+
+  participant.isActive = false;
+  await participant.save();
+
+  return true;
 };
+
+
+// ─── Get Participants ────────────────────────────────────────────────────────
+
+export const getParticipants = async (interviewId) => {
+  return await Participant.find({ interviewId, isActive: true })
+    .populate("userId", "name email");
+};
+
+
+// ─── Heartbeat ───────────────────────────────────────────────────────────────
 
 export const updateHeartbeat = async (interviewId, userId) => {
   await Participant.findOneAndUpdate(
     { interviewId, userId },
-    {
-      lastSeen: new Date(),
-      isActive: true
-    }
+    { lastSeen: new Date(), isActive: true }
   );
 };

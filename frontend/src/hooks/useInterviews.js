@@ -1,26 +1,60 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "../lib/api";
 
-// ─── Query Keys ─────────────────────────────────────────────────────────────
+// ─── Query Keys ───────────────────────────────────────────────────────────────
 export const QUERY_KEYS = {
-  interviews: ["interviews"],
-  interview: (id) => ["interview", id],
+  interviews:      ["interviews"],
+  interview:       (id) => ["interview", id],
+  applications:    (id) => ["applications", id],
+  myApplication:   (id) => ["my-application", id],
 };
 
-// ─── Fetchers ────────────────────────────────────────────────────────────────
+// ─── API Fetchers ─────────────────────────────────────────────────────────────
 
 const fetchInterviews = async () => {
   const { data } = await api.get("/api/interview/list");
   return data.interviews;
 };
 
-const applyToInterview = async (interviewId) => {
-  const { data } = await api.post(`/api/interview/apply/${interviewId}`);
-  return data;
+const fetchInterview = async (id) => {
+  const { data } = await api.get(`/api/interview/${id}`);
+  return data.interview;
+};
+
+const fetchApplications = async (interviewId) => {
+  const { data } = await api.get(`/api/interview/applications/${interviewId}`);
+  return data.applications;
+};
+
+const fetchMyApplication = async (interviewId) => {
+  const { data } = await api.get(`/api/interview/my-application/${interviewId}`);
+  return data.application; // null if not applied
 };
 
 const createInterview = async (payload) => {
   const { data } = await api.post("/api/interview/create", payload);
+  return data.interview;
+};
+
+const applyToInterview = async ({ interviewId, resumeUrl, resumeType, cloudinaryPublicId }) => {
+  const { data } = await api.post(`/api/interview/apply/${interviewId}`, {
+    resumeUrl,
+    resumeType,
+    cloudinaryPublicId,
+  });
+  return data.application;
+};
+
+const updateApplicationStatus = async ({ applicationId, status }) => {
+  const { data } = await api.patch(
+    `/api/interview/applications/${applicationId}/status`,
+    { status }
+  );
+  return data.application;
+};
+
+const startInterview = async (interviewId) => {
+  const { data } = await api.post(`/api/interview/start/${interviewId}`);
   return data.interview;
 };
 
@@ -29,34 +63,22 @@ const joinInterview = async (interviewId) => {
   return data; // { success, token, roomName, url }
 };
 
-const startInterview = async (interviewId) => {
-  const { data } = await api.post(`/api/interview/start/${interviewId}`);
-  return data.interview;
-};
+// ─── Upload Resume File ───────────────────────────────────────────────────────
 
-// ─── Fetch Single Interview ─────────────────────────────────────────────
+export const uploadResumeFile = async (file) => {
+  const formData = new FormData();
+  formData.append("resume", file);
 
-const fetchInterview = async (interviewId) => {
-  const { data } = await api.get(`/api/interview/${interviewId}`);
-  return data.interview;
-};
-
-/**
- * Fetch single interview details (used in room page)
- */
-export function useInterview(interviewId) {
-  return useQuery({
-    queryKey: QUERY_KEYS.interview(interviewId),
-    queryFn: () => fetchInterview(interviewId),
-    enabled: !!interviewId, // prevents unnecessary calls
+  const { data } = await api.post("/api/upload/resume", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
   });
-}
 
-// ─── Hooks ───────────────────────────────────────────────────────────────────
+  return data; // { success, url, publicId }
+};
 
-/**
- * Fetch all available interviews.
- */
+// ─── Hooks ────────────────────────────────────────────────────────────────────
+
+/** Fetch all available interviews (public) */
 export function useInterviews() {
   return useQuery({
     queryKey: QUERY_KEYS.interviews,
@@ -64,61 +86,92 @@ export function useInterviews() {
   });
 }
 
-/**
- * Apply to a specific interview session.
- * Automatically invalidates the interviews list after success.
- */
-export function useApplyInterview() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: applyToInterview,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.interviews });
-    },
+/** Fetch a single interview — polls every 3s until it starts */
+export function useInterview(id) {
+  return useQuery({
+    queryKey: QUERY_KEYS.interview(id),
+    queryFn: () => fetchInterview(id),
+    enabled: !!id,
+    refetchInterval: (query) =>
+      query.state.data?.isStarted ? false : 3000,
   });
 }
 
-/**
- * Create a new interview session (host flow).
- * Automatically invalidates the interviews list after success.
- */
+/** Fetch all applications for an interview (host only) */
+export function useApplications(interviewId) {
+  return useQuery({
+    queryKey: QUERY_KEYS.applications(interviewId),
+    queryFn: () => fetchApplications(interviewId),
+    enabled: !!interviewId,
+    refetchInterval: 5000, // refresh every 5s so host sees new applicants live
+  });
+}
+
+/** Check if the current user has applied to this interview */
+export function useMyApplication(interviewId) {
+  return useQuery({
+    queryKey: QUERY_KEYS.myApplication(interviewId),
+    queryFn: () => fetchMyApplication(interviewId),
+    enabled: !!interviewId,
+    refetchInterval: 4000, // poll for status changes (pending → accepted/rejected)
+  });
+}
+
+/** Create a new interview session */
 export function useCreateInterview() {
   const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: createInterview,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.interviews });
     },
-    onError: (error) => {
-      console.error("[useCreateInterview] Error:", error.response?.data || error.message);
+    onError: (err) => {
+      console.error("[useCreateInterview]", err.response?.data || err.message);
     },
   });
 }
 
-/**
- * Fetch LiveKit token + URL for a specific interview room.
- * Changed to useMutation so the token is ONLY generated when the user clicks 'Join',
- * rather than automatically on page load.
- */
+/** Apply to an interview with resume */
+export function useApplyInterview() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: applyToInterview,
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.myApplication(variables.interviewId) });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.interviews });
+    },
+  });
+}
+
+/** Accept or reject an application (host only) */
+export function useUpdateApplicationStatus() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: updateApplicationStatus,
+    onSuccess: (updatedApp) => {
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.applications(updatedApp.interviewId),
+      });
+    },
+  });
+}
+
+/** Start an interview (host only) */
+export function useStartInterview() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: startInterview,
+    onSuccess: (interview) => {
+      // Correctly invalidate by the interview's _id string
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.interview(interview._id) });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.interviews });
+    },
+  });
+}
+
+/** Get LiveKit token + URL to enter the room */
 export function useJoinInterview() {
   return useMutation({
     mutationFn: joinInterview,
-  });
-}
-
-/**
- * Start an interview (host only).
- * Automatically invalidates the interview query after success.
- */
-export function useStartInterview() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: startInterview,
-    onSuccess: (_, id) => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.interview(id) });
-    },
   });
 }

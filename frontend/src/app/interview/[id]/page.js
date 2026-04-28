@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { LiveKitRoom, VideoConference } from "@livekit/components-react";
+import "@livekit/components-styles";
 import { useInterview, useJoinInterview, useStartInterview, useMyApplication } from "../../../hooks/useInterviews";
 import useAuthStore from "../../../store/useAuthStore";
 import ApplyModal from "../../../components/ApplyModal";

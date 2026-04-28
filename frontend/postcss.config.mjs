@@ -1,6 +1,11 @@
 const config = {
   plugins: {
-    "@tailwindcss/postcss": {},
+    "@tailwindcss/postcss": {
+      // Prevent excessive rebuilds
+      optimize: {
+        minify: false,
+      },
+    },
   },
 };
 

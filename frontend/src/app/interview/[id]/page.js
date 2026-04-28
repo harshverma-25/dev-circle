@@ -62,16 +62,27 @@ export default function InterviewRoomPage() {
   // Handle active LiveKit room display first
   if (joinedData?.token) {
     return (
-      <div className="h-screen w-full bg-black">
+      <div className="h-screen w-full bg-black" style={{ margin: 0, padding: 0 }}>
         <LiveKitRoom
           token={joinedData.token}
           serverUrl={joinedData.url}
-          connect
-          video
-          audio
-          className="h-full"
+          connect={true}
+          video={true}
+          audio={true}
+          className="h-full w-full"
+          style={{ 
+            width: '100vw', 
+            height: '100vh',
+            margin: 0,
+            padding: 0
+          }}
         >
-          <VideoConference />
+          <VideoConference 
+            style={{
+              width: '100%',
+              height: '100%'
+            }}
+          />
         </LiveKitRoom>
       </div>
     );

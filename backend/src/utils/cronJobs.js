@@ -26,10 +26,7 @@ const markInactiveParticipants = async () => {
 };
 
 
-// ─── Delete Old Cloudinary Resume Files ──────────────────────────────────────
-// Runs daily at midnight.
-// Finds applications where a file was uploaded to Cloudinary > 2 days ago
-// and deletes both the cloud file and the stored reference.
+
 
 const deleteOldResumeFiles = async () => {
   try {

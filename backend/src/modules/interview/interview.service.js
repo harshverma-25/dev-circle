@@ -6,6 +6,24 @@ import User from "../../models/user.model.js";
 import { generateLiveKitToken } from "../../services/livekit.service.js";
 
 
+// ─── AUTO-END LOGIC (Lazy Cleanup) ──────────────────────────────────────────
+
+const checkAndApplyAutoEnd = async (interview) => {
+  if (!interview || interview.status !== "live") return interview;
+
+  const scheduledAt = new Date(interview.scheduledAt).getTime();
+  const durationMs = interview.duration * 60 * 1000;
+  const now = new Date().getTime();
+
+  if (now > scheduledAt + durationMs) {
+    interview.status = "ended";
+    interview.endedAt = new Date();
+    await interview.save();
+  }
+  return interview;
+};
+
+
 // ─── Create Interview ────────────────────────────────────────────────────────
 
 export const createInterview = async (data, userId) => {
@@ -30,6 +48,11 @@ export const getInterviews = async () => {
     .sort({ createdAt: -1 })
     .populate("createdBy", "name email");
 
+  // Lazy update expired ones
+  for (const interview of interviews) {
+    await checkAndApplyAutoEnd(interview);
+  }
+
   return interviews;
 };
 
@@ -37,10 +60,12 @@ export const getInterviews = async () => {
 // ─── Get Single Interview ────────────────────────────────────────────────────
 
 export const getInterviewById = async (interviewId) => {
-  const interview = await Interview.findById(interviewId)
+  let interview = await Interview.findById(interviewId)
     .populate("createdBy", "name email");
 
   if (!interview) throw new AppError("Interview not found", 404);
+
+  interview = await checkAndApplyAutoEnd(interview);
 
   return interview;
 };
@@ -197,6 +222,8 @@ export const cancelInterview = async (interviewId, userId) => {
 export const joinInterview = async (interviewId, userId) => {
   const interview = await Interview.findById(interviewId);
   if (!interview) throw new AppError("Interview not found", 404);
+
+  interview = await checkAndApplyAutoEnd(interview);
 
   if (interview.status !== "live") {
     throw new AppError(`Interview is currently ${interview.status}`, 400);

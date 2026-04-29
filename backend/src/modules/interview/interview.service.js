@@ -6,20 +6,37 @@ import User from "../../models/user.model.js";
 import { generateLiveKitToken } from "../../services/livekit.service.js";
 
 
-// ─── AUTO-END LOGIC (Lazy Cleanup) ──────────────────────────────────────────
+// ─── LIFECYCLE SYNC (Lazy Cleanup) ──────────────────────────────────────────
+// NOTE: This logic replaces cron jobs for reliability on sleeping servers.
 
-const checkAndApplyAutoEnd = async (interview) => {
-  if (!interview || interview.status !== "live") return interview;
+const checkAndApplyInterviewState = async (interview) => {
+  if (!interview || !interview.scheduledAt || typeof interview.duration !== "number") return interview;
 
-  const scheduledAt = new Date(interview.scheduledAt).getTime();
+  const now = new Date();
+  const scheduledTime = new Date(interview.scheduledAt).getTime();
   const durationMs = interview.duration * 60 * 1000;
-  const now = new Date().getTime();
+  const sixHoursMs = 6 * 60 * 60 * 1000;
 
-  if (now > scheduledAt + durationMs) {
-    interview.status = "ended";
-    interview.endedAt = new Date();
-    await interview.save();
+  // 1. ATOMIC UPDATE: If scheduled and 6+ hours past scheduledAt -> cancelled
+  if (interview.status === "scheduled" && now.getTime() > (scheduledTime + sixHoursMs)) {
+    const updated = await Interview.findOneAndUpdate(
+      { _id: interview._id, status: "scheduled" },
+      { $set: { status: "cancelled" } },
+      { new: true }
+    ).populate("createdBy", "name email");
+    return updated || interview;
   }
+
+  // 2. ATOMIC UPDATE: If live and past duration -> ended
+  if (interview.status === "live" && now.getTime() > (scheduledTime + durationMs)) {
+    const updated = await Interview.findOneAndUpdate(
+      { _id: interview._id, status: "live" },
+      { $set: { status: "ended", endedAt: now } },
+      { new: true }
+    ).populate("createdBy", "name email");
+    return updated || interview;
+  }
+
   return interview;
 };
 
@@ -48,12 +65,24 @@ export const getInterviews = async () => {
     .sort({ createdAt: -1 })
     .populate("createdBy", "name email");
 
-  // Lazy update expired ones
-  for (const interview of interviews) {
-    await checkAndApplyAutoEnd(interview);
-  }
+  const now = new Date();
 
-  return interviews;
+  // Optimized: Only trigger sync if state objectively needs changing
+  const syncedInterviews = await Promise.all(interviews.map(async (i) => {
+    const sTime = new Date(i.scheduledAt).getTime();
+    const dMs = (i.duration || 0) * 60 * 1000;
+    const expiryMs = 6 * 60 * 60 * 1000;
+
+    const needsCancel = i.status === "scheduled" && now.getTime() > (sTime + expiryMs);
+    const needsEnd = i.status === "live" && now.getTime() > (sTime + dMs);
+
+    if (needsCancel || needsEnd) {
+      return await checkAndApplyInterviewState(i);
+    }
+    return i;
+  }));
+
+  return syncedInterviews;
 };
 
 
@@ -65,7 +94,7 @@ export const getInterviewById = async (interviewId) => {
 
   if (!interview) throw new AppError("Interview not found", 404);
 
-  interview = await checkAndApplyAutoEnd(interview);
+  interview = await checkAndApplyInterviewState(interview);
 
   return interview;
 };
@@ -158,59 +187,51 @@ export const updateApplicationStatus = async (applicationId, status, hostId) => 
 // ─── Start Interview (Host Only) ──────────────────────────────────────────────
 
 export const startInterview = async (interviewId, userId) => {
-  const interview = await Interview.findById(interviewId);
-  if (!interview) throw new AppError("Interview not found", 404);
+  const result = await Interview.findOneAndUpdate(
+    { _id: interviewId, createdBy: userId, status: "scheduled" },
+    { 
+      $set: { 
+        status: "live", 
+        startedAt: new Date(), 
+        roomName: interviewId.toString() 
+      } 
+    },
+    { new: true }
+  );
 
-  if (interview.createdBy.toString() !== userId) {
-    throw new AppError("Not authorized", 403);
-  }
+  if (!result) throw new AppError("Cannot start. Interview may be already live or ended", 400);
 
-  if (interview.isStarted) throw new AppError("Interview already started", 409);
-
-  interview.isStarted = true;
-  interview.status = "live";
-  interview.startedAt = new Date();
-  interview.roomName  = interview._id.toString();
-
-  await interview.save();
-
-  return interview;
+  return result;
 };
 
 
 // ─── End Interview (Host Only) ────────────────────────────────────────────────
 
 export const endInterview = async (interviewId, userId) => {
-  const interview = await Interview.findById(interviewId);
-  if (!interview) throw new AppError("Interview not found", 404);
+  const result = await Interview.findOneAndUpdate(
+    { _id: interviewId, createdBy: userId, status: "live" },
+    { $set: { status: "ended", endedAt: new Date() } },
+    { new: true }
+  );
 
-  if (interview.createdBy.toString() !== userId) {
-    throw new AppError("Not authorized", 403);
-  }
+  if (!result) throw new AppError("Cannot end. Session not live or not authorized", 403);
 
-  interview.status = "ended";
-  interview.endedAt = new Date();
-
-  await interview.save();
-
-  return interview;
+  return result;
 };
 
 
 // ─── Cancel Interview (Host Only) ─────────────────────────────────────────────
 
 export const cancelInterview = async (interviewId, userId) => {
-  const interview = await Interview.findById(interviewId);
-  if (!interview) throw new AppError("Interview not found", 404);
+  const result = await Interview.findOneAndUpdate(
+    { _id: interviewId, createdBy: userId, status: "scheduled" },
+    { $set: { status: "cancelled" } },
+    { new: true }
+  );
 
-  if (interview.createdBy.toString() !== userId) {
-    throw new AppError("Not authorized", 403);
-  }
+  if (!result) throw new AppError("Cannot cancel. Session already live/ended or not authorized", 403);
 
-  interview.status = "cancelled";
-  await interview.save();
-
-  return interview;
+  return result;
 };
 
 
@@ -223,10 +244,16 @@ export const joinInterview = async (interviewId, userId) => {
   const interview = await Interview.findById(interviewId);
   if (!interview) throw new AppError("Interview not found", 404);
 
-  interview = await checkAndApplyAutoEnd(interview);
+  interview = await checkAndApplyInterviewState(interview);
 
   if (interview.status !== "live") {
     throw new AppError(`Interview is currently ${interview.status}`, 400);
+  }
+
+  // Time window check: current time < scheduledAt + duration
+  const endTime = new Date(new Date(interview.scheduledAt).getTime() + interview.duration * 60 * 1000);
+  if (new Date() > endTime) {
+    throw new AppError("Interview session has expired", 403);
   }
 
   const isHost = interview.createdBy.toString() === userId;

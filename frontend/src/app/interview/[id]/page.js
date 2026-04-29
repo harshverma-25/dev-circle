@@ -221,7 +221,7 @@ export default function InterviewRoomPage() {
 
   // NORMAL UI
   const isHost = interview.createdBy?._id === user?.id;
-  const isStarted = interview.isStarted;
+  const isLive = interview.status === "live";
 
   const handleJoin = () => {
     joinRoom(id, {
@@ -250,7 +250,7 @@ export default function InterviewRoomPage() {
           <div className="flex justify-between items-start mb-6">
             <h1 className="text-3xl font-bold">{interview.title}</h1>
             <div className="flex gap-3">
-              {isStarted && !isEnded && (
+              {isLive && !isEnded && (
                 <button
                   onClick={() => endInterview(id, { onSuccess: () => router.push("/interview") })}
                   className="bg-red-500/10 text-red-500 border border-red-500/20 px-4 py-2 rounded-xl font-bold hover:bg-red-500 hover:text-white transition-all"
@@ -258,7 +258,7 @@ export default function InterviewRoomPage() {
                   End Interview
                 </button>
               )}
-              {!isStarted && (
+              {!isLive && (
                 <button
                   onClick={() => cancelInterview(id, { onSuccess: () => router.push("/interview") })}
                   className="bg-white/5 text-zinc-400 border border-white/10 px-4 py-2 rounded-xl font-bold hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/20 transition-all"
@@ -275,7 +275,7 @@ export default function InterviewRoomPage() {
                   <p className="text-zinc-500 text-lg mb-4">This interview session has ended.</p>
                   <button onClick={() => router.push("/interview")} className="bg-white/10 px-6 py-2 rounded-xl">Back to List</button>
                </div>
-            ) : isStarted ? (
+            ) : isLive ? (
               <div className="text-center py-10">
                 <p className="text-[#4edea3] font-bold mb-6 flex items-center justify-center gap-2">
                   <span className="w-2 h-2 bg-[#4edea3] rounded-full animate-pulse"></span>
@@ -331,7 +331,7 @@ export default function InterviewRoomPage() {
               </button>
             )}
 
-            {appStatus === "accepted" && isStarted && (
+            {appStatus === "accepted" && isLive && (
               <div className="mt-8">
                  <p className="text-[#4edea3] font-bold mb-4 flex items-center justify-center gap-2">
                   <span className="w-2 h-2 bg-[#4edea3] rounded-full animate-pulse"></span>
@@ -346,7 +346,7 @@ export default function InterviewRoomPage() {
               </div>
             )}
 
-            {appStatus === "accepted" && !isStarted && (
+            {appStatus === "accepted" && !isLive && (
               <p className="text-zinc-500 text-lg mt-4 italic">The host hasn't started the session yet. Hang tight!</p>
             )}
 

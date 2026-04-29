@@ -28,11 +28,6 @@ const interviewSchema = new mongoose.Schema(
       default: 5
     },
 
-    isStarted: {
-      type: Boolean,
-      default: false
-    },
-
     startedAt: {
       type: Date,
       default: null

@@ -5,31 +5,8 @@ import Participant from "../models/participant.model.js";
 import cloudinary from "../config/cloudinary.js";
 
 
-// ─── Delete Expired Interviews ────────────────────────────────────────────────
-// Removes interviews that were never started and are 6+ hours past their scheduledAt
-
-const deleteExpiredInterviews = async () => {
-  try {
-    const now = new Date();
-
-    const expiredInterviews = await Interview.find({
-      isStarted: false,
-      scheduledAt: { $lt: new Date(now.getTime() - 6 * 60 * 60 * 1000) }
-    });
-
-    for (const interview of expiredInterviews) {
-      await Application.deleteMany({ interviewId: interview._id });
-      await Participant.deleteMany({ interviewId: interview._id });
-      await Interview.findByIdAndDelete(interview._id);
-    }
-
-    if (expiredInterviews.length > 0) {
-      console.log(`[Cron] Deleted ${expiredInterviews.length} expired interviews`);
-    }
-  } catch (error) {
-    console.error("[Cron] deleteExpiredInterviews error:", error);
-  }
-};
+// NOTE: Lifecycle logic moved to API/service layer due to unreliable cron environment (sleeping servers).
+// Cron is now only used for peripheral cleanup tasks.
 
 
 // ─── Mark Inactive Participants ───────────────────────────────────────────────
@@ -95,13 +72,13 @@ const deleteOldResumeFiles = async () => {
 
 // ─── Schedule Jobs ────────────────────────────────────────────────────────────
 
-// Every 10 minutes — clean up expired interviews
-cron.schedule("*/10 * * * *", deleteExpiredInterviews);
-
 // Every minute — mark inactive participants
 cron.schedule("*/1 * * * *", markInactiveParticipants);
 
 // Every day at midnight — delete old Cloudinary resume files
 cron.schedule("0 0 * * *", deleteOldResumeFiles);
 
-export default deleteExpiredInterviews;
+export default {
+    markInactiveParticipants,
+    deleteOldResumeFiles
+};

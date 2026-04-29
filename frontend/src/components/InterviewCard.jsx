@@ -6,8 +6,15 @@ import { FiClock, FiUsers, FiArrowRight } from "react-icons/fi";
 export default function InterviewCard({ interview }) {
   const router = useRouter();
 
-  const isLive = interview.isStarted;
-  const statusColor = isLive ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" : "bg-amber-500/20 text-amber-400 border-amber-500/30";
+  const isLive = interview.status === "live";
+  const isEnded = interview.status === "ended" || interview.status === "cancelled";
+  
+  const statusLabel = isLive ? "● LIVE" : isEnded ? "Finished" : "Waiting";
+  const statusColor = isLive 
+    ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" 
+    : isEnded 
+    ? "bg-zinc-500/20 text-zinc-400 border-zinc-500/30" 
+    : "bg-amber-500/20 text-amber-400 border-amber-500/30";
   const dateStr = new Date(interview.scheduledAt).toLocaleDateString(undefined, {
     month: "short", day: "numeric", hour: "numeric", minute: "2-digit"
   });
@@ -17,7 +24,7 @@ export default function InterviewCard({ interview }) {
       <div>
         <div className="flex justify-between items-start mb-4">
           <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border ${statusColor}`}>
-            {isLive ? "● LIVE" : "Waiting"}
+            {statusLabel}
           </span>
           <span className="text-zinc-500 text-xs flex items-center gap-1.5 bg-white/5 px-2.5 py-1 rounded-full">
             <FiClock size={12} /> {dateStr}

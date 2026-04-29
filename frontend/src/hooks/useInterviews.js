@@ -96,14 +96,17 @@ export function useInterviews() {
   });
 }
 
-/** Fetch a single interview — polls every 3s until it starts */
+/** 
+ * Fetch a single interview — polls every 3s only when scheduled.
+ * TODO: replace polling with WebSocket (future improvement) 
+ */
 export function useInterview(id) {
   return useQuery({
     queryKey: QUERY_KEYS.interview(id),
     queryFn: () => fetchInterview(id),
     enabled: !!id,
     refetchInterval: (query) =>
-      query.state.data?.isStarted ? false : 3000,
+      query.state.data?.status === "scheduled" ? 3000 : false,
   });
 }
 

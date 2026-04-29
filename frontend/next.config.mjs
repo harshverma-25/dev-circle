@@ -14,10 +14,7 @@ const nextConfig = {
     return config;
   },
   
-  // Exclude directories from file tracing
-  outputFileTracingExcludes: {
-    '*': ['**/node_modules/**', '.git/**'],
-  },
+  // outputFileTracingExcludes removed to avoid breaking serverless deployments
 };
 
 export default nextConfig;

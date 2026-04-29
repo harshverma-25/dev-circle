@@ -21,7 +21,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable} dark h-full antialiased`}>
-      <body className="min-h-full flex flex-col bg-background text-on-surface font-body-md">
+      <body className="min-h-full flex flex-col bg-[#0b0b0f] text-white text-base">
         <QueryProvider>{children}</QueryProvider>
       </body>
     </html>

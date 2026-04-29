@@ -2,6 +2,7 @@ import Interview from "../../models/interview.model.js";
 import Application from "../../models/application.model.js";
 import Participant from "../../models/participant.model.js";
 import { AppError } from "../../utils/AppError.js";
+import User from "../../models/user.model.js";
 import { generateLiveKitToken } from "../../services/livekit.service.js";
 
 
@@ -181,7 +182,11 @@ export const joinInterview = async (interviewId, userId) => {
     { upsert: true, new: true }
   );
 
-  const token = await generateLiveKitToken(interview.roomName, userId);
+  // Get user details for metadata
+  const user = await User.findById(userId);
+  if (!user) throw new AppError("User not found", 404);
+
+  const token = await generateLiveKitToken(interview.roomName, userId, { name: user.name });
 
   return {
     token,

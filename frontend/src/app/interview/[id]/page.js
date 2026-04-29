@@ -24,14 +24,9 @@ import ApplyModal from "../../../components/ApplyModal";
 import ApplicationsList from "../../../components/ApplicationsList";
 
 import {
-  FiPlay,
-  FiVideo,
-  FiClock,
-  FiFileText,
-  FiCheckCircle,
-  FiXCircle,
   FiMic,
   FiMicOff,
+  FiVideo,
   FiVideoOff,
   FiPhoneOff
 } from "react-icons/fi";
@@ -41,16 +36,44 @@ import {
 function VideoGrid() {
   const tracks = useTracks([Track.Source.Camera]);
 
+  if (tracks.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-full text-zinc-500">
+        No participants yet
+      </div>
+    );
+  }
+
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 gap-2 h-full w-full p-2">
-      {tracks.map((track) => (
-        <div
-          key={track.sid}
-          className="bg-zinc-900 rounded-xl overflow-hidden flex items-center justify-center"
-        >
-          <VideoTrack trackRef={track} />
-        </div>
-      ))}
+    <div
+      className="grid gap-3 p-4 h-full w-full"
+      style={{
+        gridTemplateColumns:
+          tracks.length === 1
+            ? "1fr"
+            : tracks.length === 2
+            ? "1fr 1fr"
+            : "repeat(auto-fit, minmax(250px, 1fr))"
+      }}
+    >
+      {tracks.map((track) => {
+        const metadata = track.participant.metadata
+          ? JSON.parse(track.participant.metadata)
+          : null;
+        const name = metadata?.name || track.participant.identity;
+
+        return (
+          <div
+            key={`${track.participant.identity}-${track.source}`}
+            className="bg-zinc-900 rounded-xl overflow-hidden flex items-center justify-center relative"
+          >
+            <VideoTrack trackRef={track} />
+            <div className="absolute bottom-2 left-2 bg-black/60 px-2 py-1 text-xs rounded text-white z-10">
+              {name}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -59,7 +82,7 @@ function VideoGrid() {
 // ================= CHAT PANEL =================
 function ChatPanel() {
   return (
-    <div className="w-[320px] bg-[#0f0f0f] border-l border-white/10 flex flex-col">
+    <div className="hidden md:flex w-[300px] flex-col bg-[#111] border-l border-white/10">
       <div className="p-4 border-b border-white/10 text-white font-semibold">
         Messages
       </div>
@@ -104,17 +127,17 @@ function Controls() {
   };
 
   return (
-    <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex gap-4 bg-black/60 backdrop-blur px-6 py-3 rounded-2xl">
+    <div className="w-full flex justify-center gap-6 py-4 bg-black border-t border-white/10">
       <button onClick={toggleMic} className="text-white">
-        {mic ? <FiMic size={20} /> : <FiMicOff size={20} />}
+        {mic ? <FiMic size={22} /> : <FiMicOff size={22} />}
       </button>
 
       <button onClick={toggleCam} className="text-white">
-        {cam ? <FiVideo size={20} /> : <FiVideoOff size={20} />}
+        {cam ? <FiVideo size={22} /> : <FiVideoOff size={22} />}
       </button>
 
       <button onClick={leaveRoom} className="text-red-500">
-        <FiPhoneOff size={20} />
+        <FiPhoneOff size={22} />
       </button>
     </div>
   );
@@ -124,15 +147,22 @@ function Controls() {
 // ================= MAIN ROOM UI =================
 function CustomRoomUI() {
   return (
-    <div className="flex h-screen w-screen bg-black">
-      {/* VIDEO */}
-      <div className="flex-1 relative">
-        <VideoGrid />
-        <Controls />
+    <div className="flex flex-col h-screen w-screen bg-black">
+      
+      {/* TOP AREA */}
+      <div className="flex flex-1 overflow-hidden">
+        
+        {/* VIDEO AREA */}
+        <div className="flex-1">
+          <VideoGrid />
+        </div>
+
+        {/* CHAT */}
+        <ChatPanel />
       </div>
 
-      {/* CHAT */}
-      <ChatPanel />
+      {/* CONTROLS */}
+      <Controls />
     </div>
   );
 }
@@ -148,16 +178,16 @@ export default function InterviewRoomPage() {
   const [showApplyModal, setShowApplyModal] = useState(false);
 
   const { data: interview, isLoading: isLoadingInterview } = useInterview(id);
-  const { data: myApplication, isLoading: isLoadingApp } = useMyApplication(id);
+  const { data: myApplication } = useMyApplication(id);
 
-  const { mutate: joinRoom, isPending: isJoining, error: joinError } = useJoinInterview();
-  const { mutate: startInterview, isPending: isStarting } = useStartInterview();
+  const { mutate: joinRoom } = useJoinInterview();
+  const { mutate: startInterview } = useStartInterview();
 
   useEffect(() => {
     if (hasHydrated && !user) router.push("/auth");
   }, [user, hasHydrated]);
 
-  // ================= LOADING =================
+  // LOADING
   if (!hasHydrated || isLoadingInterview) {
     return (
       <Layout>
@@ -168,7 +198,7 @@ export default function InterviewRoomPage() {
     );
   }
 
-  // ================= LIVE ROOM =================
+  // LIVE ROOM
   if (joinedData?.token) {
     return (
       <LiveKitRoom
@@ -185,7 +215,7 @@ export default function InterviewRoomPage() {
     );
   }
 
-  // ================= NORMAL UI =================
+  // NORMAL UI
   const isHost = interview.createdBy?._id === user?.id;
   const isStarted = interview.isStarted;
 

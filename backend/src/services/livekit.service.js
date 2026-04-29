@@ -1,11 +1,12 @@
 import { AccessToken } from "livekit-server-sdk";
 
-export const generateLiveKitToken = async (roomName, userId) => {
+export const generateLiveKitToken = async (roomName, userId, metadata = {}) => {
   const at = new AccessToken(
     process.env.LIVEKIT_API_KEY,
     process.env.LIVEKIT_API_SECRET,
     {
-      identity: userId.toString()
+      identity: userId.toString(),
+      metadata: JSON.stringify(metadata)
     }
   );
 

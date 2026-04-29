@@ -9,6 +9,8 @@ import {
   getMyApplicationController,
   updateApplicationStatusController,
   startInterviewController,
+  endInterviewController,
+  cancelInterviewController,
   joinInterviewController,
   leaveInterviewController,
   kickParticipantController,
@@ -65,6 +67,12 @@ router.get("/list", getInterviewsController);
 
 // Start interview (host only)
 router.post("/start/:id", protect, idParam, validate, startInterviewController);
+
+// End interview (host only)
+router.post("/end/:id", protect, idParam, validate, endInterviewController);
+
+// Cancel/Delete interview (host only)
+router.delete("/:id", protect, idParam, validate, cancelInterviewController);
 
 // Join interview (get LiveKit token)
 router.get("/join/:id", protect, idParam, validate, joinInterviewController);

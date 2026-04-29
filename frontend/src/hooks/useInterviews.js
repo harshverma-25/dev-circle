@@ -58,6 +58,16 @@ const startInterview = async (interviewId) => {
   return data.interview;
 };
 
+const endInterview = async (interviewId) => {
+  const { data } = await api.post(`/api/interview/end/${interviewId}`);
+  return data.interview;
+};
+
+const cancelInterview = async (interviewId) => {
+  const { data } = await api.delete(`/api/interview/${interviewId}`);
+  return data.interview;
+};
+
 const joinInterview = async (interviewId) => {
   const { data } = await api.get(`/api/interview/join/${interviewId}`);
   return data; // { success, token, roomName, url }
@@ -163,6 +173,30 @@ export function useStartInterview() {
     mutationFn: startInterview,
     onSuccess: (interview) => {
       // Correctly invalidate by the interview's _id string
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.interview(interview._id) });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.interviews });
+    },
+  });
+}
+
+/** End an interview (host only) */
+export function useEndInterview() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: endInterview,
+    onSuccess: (interview) => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.interview(interview._id) });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.interviews });
+    },
+  });
+}
+
+/** Cancel an interview (host only) */
+export function useCancelInterview() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: cancelInterview,
+    onSuccess: (interview) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.interview(interview._id) });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.interviews });
     },

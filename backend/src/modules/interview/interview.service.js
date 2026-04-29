@@ -54,7 +54,9 @@ export const applyToInterview = async (interviewId, userId, resumeData) => {
   const interview = await Interview.findById(interviewId);
   if (!interview) throw new AppError("Interview not found", 404);
 
-  if (interview.isStarted) throw new AppError("Interview already started", 409);
+  if (interview.status !== "scheduled") {
+    throw new AppError(`Cannot apply. Interview is currently ${interview.status}`, 409);
+  }
 
   // Prevent double applying
   const existing = await Application.findOne({ interviewId, userId });
@@ -141,6 +143,7 @@ export const startInterview = async (interviewId, userId) => {
   if (interview.isStarted) throw new AppError("Interview already started", 409);
 
   interview.isStarted = true;
+  interview.status = "live";
   interview.startedAt = new Date();
   interview.roomName  = interview._id.toString();
 
@@ -150,13 +153,54 @@ export const startInterview = async (interviewId, userId) => {
 };
 
 
+// ─── End Interview (Host Only) ────────────────────────────────────────────────
+
+export const endInterview = async (interviewId, userId) => {
+  const interview = await Interview.findById(interviewId);
+  if (!interview) throw new AppError("Interview not found", 404);
+
+  if (interview.createdBy.toString() !== userId) {
+    throw new AppError("Not authorized", 403);
+  }
+
+  interview.status = "ended";
+  interview.endedAt = new Date();
+
+  await interview.save();
+
+  return interview;
+};
+
+
+// ─── Cancel Interview (Host Only) ─────────────────────────────────────────────
+
+export const cancelInterview = async (interviewId, userId) => {
+  const interview = await Interview.findById(interviewId);
+  if (!interview) throw new AppError("Interview not found", 404);
+
+  if (interview.createdBy.toString() !== userId) {
+    throw new AppError("Not authorized", 403);
+  }
+
+  interview.status = "cancelled";
+  await interview.save();
+
+  return interview;
+};
+
+
+// TODO: Add cron job to delete ended/cancelled interviews after 24 hours to keep DB clean.
+
+
 // ─── Join Interview ──────────────────────────────────────────────────────────
 
 export const joinInterview = async (interviewId, userId) => {
   const interview = await Interview.findById(interviewId);
   if (!interview) throw new AppError("Interview not found", 404);
 
-  if (!interview.isStarted) throw new AppError("Interview has not started yet", 400);
+  if (interview.status !== "live") {
+    throw new AppError(`Interview is currently ${interview.status}`, 400);
+  }
 
   const isHost = interview.createdBy.toString() === userId;
 

@@ -7,6 +7,8 @@ import {
   getMyApplication,
   updateApplicationStatus,
   startInterview,
+  endInterview,
+  cancelInterview,
   joinInterview,
   leaveInterview,
   kickParticipant,
@@ -116,6 +118,30 @@ export const updateApplicationStatusController = async (req, res, next) => {
 export const startInterviewController = async (req, res, next) => {
   try {
     const interview = await startInterview(req.params.id, req.user.userId);
+    res.status(200).json({ success: true, interview });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+// ─── End Interview ────────────────────────────────────────────────────────────
+
+export const endInterviewController = async (req, res, next) => {
+  try {
+    const interview = await endInterview(req.params.id, req.user.userId);
+    res.status(200).json({ success: true, interview });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+// ─── Cancel Interview ─────────────────────────────────────────────────────────
+
+export const cancelInterviewController = async (req, res, next) => {
+  try {
+    const interview = await cancelInterview(req.params.id, req.user.userId);
     res.status(200).json({ success: true, interview });
   } catch (error) {
     next(error);

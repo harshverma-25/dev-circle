@@ -41,6 +41,17 @@ const interviewSchema = new mongoose.Schema(
     roomName: {
       type: String,
       default: null
+    },
+
+    status: {
+      type: String,
+      enum: ["scheduled", "live", "ended", "cancelled"],
+      default: "scheduled"
+    },
+
+    endedAt: {
+      type: Date,
+      default: null
     }
   },
   { timestamps: true }

@@ -26,11 +26,18 @@ export default function InterviewPage() {
   if (!hasHydrated || !user) return null;
 
   const filteredInterviews = interviews?.filter((interview) => {
+    // 1. Lifecycle filter
+    if (interview.status === "cancelled") return false;
+    
+    if (interview.status === "ended" && interview.endedAt) {
+      const endedAt = new Date(interview.endedAt).getTime();
+      const now = new Date().getTime();
+      const diffMs = now - endedAt;
+      if (diffMs > 60000) return false; // Hide after 1 minute
+    }
+
+    // 2. User tab filter
     if (filter === "hosting") return interview.createdBy?._id === user.id;
-    // Note: We don't have enough data in the naive list to securely filter by 'applied' natively
-    // We would need the backend list endpoint to either return an "hasApplied" boolean,
-    // or we fetch user's applications. For now, "applied" can just mean "not hosting but active".
-    // Alternatively, just hide the applied filter if not strictly needed.
     if (filter === "applied") return interview.createdBy?._id !== user.id; 
     return true;
   });

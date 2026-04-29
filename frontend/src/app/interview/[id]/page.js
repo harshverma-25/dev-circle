@@ -15,6 +15,8 @@ import {
   useInterview,
   useJoinInterview,
   useStartInterview,
+  useEndInterview,
+  useCancelInterview,
   useMyApplication
 } from "../../../hooks/useInterviews";
 
@@ -182,6 +184,8 @@ export default function InterviewRoomPage() {
 
   const { mutate: joinRoom } = useJoinInterview();
   const { mutate: startInterview } = useStartInterview();
+  const { mutate: endInterview } = useEndInterview();
+  const { mutate: cancelInterview } = useCancelInterview();
 
   useEffect(() => {
     if (hasHydrated && !user) router.push("/auth");
@@ -226,56 +230,134 @@ export default function InterviewRoomPage() {
   };
 
   if (isHost) {
+    const isCancelled = interview.status === "cancelled";
+    const isEnded = interview.status === "ended";
+
+    if (isCancelled) {
+      return (
+        <Layout>
+          <div className="max-w-4xl mx-auto py-20 text-center text-red-400">
+            <h1 className="text-2xl font-bold">This interview has been cancelled.</h1>
+            <button onClick={() => router.push("/interview")} className="mt-4 text-white hover:underline">Go back</button>
+          </div>
+        </Layout>
+      );
+    }
+
     return (
       <Layout>
         <div className="max-w-4xl mx-auto py-10 px-4 text-white">
-          <h1 className="text-2xl mb-4">{interview.title}</h1>
+          <div className="flex justify-between items-start mb-6">
+            <h1 className="text-3xl font-bold">{interview.title}</h1>
+            <div className="flex gap-3">
+              {isStarted && !isEnded && (
+                <button
+                  onClick={() => endInterview(id, { onSuccess: () => router.push("/interview") })}
+                  className="bg-red-500/10 text-red-500 border border-red-500/20 px-4 py-2 rounded-xl font-bold hover:bg-red-500 hover:text-white transition-all"
+                >
+                  End Interview
+                </button>
+              )}
+              {!isStarted && (
+                <button
+                  onClick={() => cancelInterview(id, { onSuccess: () => router.push("/interview") })}
+                  className="bg-white/5 text-zinc-400 border border-white/10 px-4 py-2 rounded-xl font-bold hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/20 transition-all"
+                >
+                  Delete Interview
+                </button>
+              )}
+            </div>
+          </div>
 
-          {isStarted ? (
-            <button
-              onClick={handleJoin}
-              className="bg-green-500 px-4 py-2 rounded"
-            >
-              Join Interview
-            </button>
-          ) : (
-            <button
-              onClick={() => startInterview(id)}
-              className="bg-blue-500 px-4 py-2 rounded"
-            >
-              Start Interview
-            </button>
-          )}
+          <div className="bg-[#141414] border border-white/5 rounded-3xl p-8 mb-10">
+            {isEnded ? (
+               <div className="text-center py-6">
+                  <p className="text-zinc-500 text-lg mb-4">This interview session has ended.</p>
+                  <button onClick={() => router.push("/interview")} className="bg-white/10 px-6 py-2 rounded-xl">Back to List</button>
+               </div>
+            ) : isStarted ? (
+              <div className="text-center py-10">
+                <p className="text-[#4edea3] font-bold mb-6 flex items-center justify-center gap-2">
+                  <span className="w-2 h-2 bg-[#4edea3] rounded-full animate-pulse"></span>
+                  SESSION IS LIVE
+                </p>
+                <button
+                  onClick={handleJoin}
+                  className="bg-[#4edea3] text-[#003824] px-10 py-4 rounded-2xl font-black text-xl hover:brightness-110 shadow-[0_10px_40px_rgba(78,222,163,0.3)] transition-all active:scale-95"
+                >
+                  Join Meeting Room
+                </button>
+              </div>
+            ) : (
+              <div className="text-center py-10">
+                <p className="text-zinc-500 mb-6 font-medium">Ready to start the session?</p>
+                <button
+                  onClick={() => startInterview(id)}
+                  className="bg-[#adc6ff] text-[#002e6a] px-10 py-4 rounded-2xl font-black text-xl hover:brightness-110 shadow-[0_10px_40px_rgba(173,198,255,0.3)] transition-all active:scale-95"
+                >
+                  Start Interview
+                </button>
+              </div>
+            )}
+          </div>
 
-          <ApplicationsList interviewId={id} />
+          {!isEnded && <ApplicationsList interviewId={id} />}
         </div>
       </Layout>
     );
   }
 
   const appStatus = myApplication?.status;
+  const isEnded = interview.status === "ended";
+  const isCancelled = interview.status === "cancelled";
 
   return (
     <Layout>
-      <div className="text-center text-white py-20">
-        <h1 className="text-2xl mb-4">{interview.title}</h1>
+      <div className="max-w-4xl mx-auto py-20 text-center text-white">
+        <h1 className="text-4xl font-bold mb-4">{interview.title}</h1>
+        
+        {isCancelled ? (
+           <p className="text-red-400 text-lg">This interview has been cancelled by the host.</p>
+        ) : isEnded ? (
+           <p className="text-zinc-500 text-lg">This interview session has ended.</p>
+        ) : (
+          <>
+            {!myApplication && (
+              <button
+                onClick={() => setShowApplyModal(true)}
+                className="bg-[#adc6ff] text-[#002e6a] px-8 py-3 rounded-xl font-bold hover:brightness-110 transition-all"
+              >
+                Apply for Interview
+              </button>
+            )}
 
-        {!myApplication && (
-          <button
-            onClick={() => setShowApplyModal(true)}
-            className="bg-blue-500 px-4 py-2 rounded"
-          >
-            Apply
-          </button>
-        )}
+            {appStatus === "accepted" && isStarted && (
+              <div className="mt-8">
+                 <p className="text-[#4edea3] font-bold mb-4 flex items-center justify-center gap-2">
+                  <span className="w-2 h-2 bg-[#4edea3] rounded-full animate-pulse"></span>
+                  INTERVIEW IS LIVE
+                </p>
+                <button
+                  onClick={handleJoin}
+                  className="bg-[#4edea3] text-[#003824] px-10 py-4 rounded-2xl font-black text-xl hover:brightness-110 shadow-[0_10px_40px_rgba(78,222,163,0.3)] transition-all active:scale-95"
+                >
+                  Join Meeting Room
+                </button>
+              </div>
+            )}
 
-        {appStatus === "accepted" && isStarted && (
-          <button
-            onClick={handleJoin}
-            className="bg-green-500 px-4 py-2 rounded mt-4"
-          >
-            Join Session
-          </button>
+            {appStatus === "accepted" && !isStarted && (
+              <p className="text-zinc-500 text-lg mt-4 italic">The host hasn't started the session yet. Hang tight!</p>
+            )}
+
+            {appStatus === "pending" && (
+              <p className="text-orange-400 text-lg mt-4">Your application is under review.</p>
+            )}
+
+            {appStatus === "rejected" && (
+              <p className="text-red-400 text-lg mt-4">Your application was not accepted for this session.</p>
+            )}
+          </>
         )}
       </div>
 

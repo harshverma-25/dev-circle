@@ -20,14 +20,26 @@ const authLimiter = rateLimit({
 });
 
 app.use(cors({
-  origin: ["http://localhost:3000", "http://localhost:3001"],
+  origin: [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "https://devcircle-dev.vercel.app"
+  ],
   credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
 }));
+
+app.options("*", cors()); // Handle preflight
 
 app.use(express.json());
 app.use(cookieParser());
 
-// ─── Health check (protected) ─────────────────────────────────────────────────
+// ─── Health check ─────────────────────────────────────────────────────────────
+app.get("/api/health", (req, res) => {
+  res.json({ status: "OK", timestamp: new Date() });
+});
+
 app.get("/api/test", protect, (req, res) => {
   res.json({ message: "Protected route accessed", user: req.user });
 });

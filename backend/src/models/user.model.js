@@ -17,8 +17,18 @@ const userSchema = new mongoose.Schema(
 
     password: {
       type: String,
-      required: true,
+      required: function() { return this.provider === "local"; },
       minlength: 6
+    },
+
+    googleId: {
+      type: String,
+      default: null
+    },
+
+    avatar: {
+      type: String,
+      default: null
     },
 
     provider: {

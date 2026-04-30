@@ -43,7 +43,7 @@ import {
 
 // ================= VIDEO GRID =================
 function VideoGrid() {
-  const tracks = useTracks([Track.Source.Camera]);
+  const tracks = useTracks([Track.Source.Camera, Track.Source.ScreenShare]);
 
   if (tracks.length === 0) {
     return (
@@ -57,36 +57,59 @@ function VideoGrid() {
     );
   }
 
+  // Get grid classes based on number of tracks
+  const getGridClasses = () => {
+    const count = tracks.length;
+    if (count === 1) return "grid-cols-1";
+    if (count === 2) return "grid-cols-1 md:grid-cols-2";
+    if (count <= 4) return "grid-cols-1 sm:grid-cols-2";
+    if (count <= 6) return "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3";
+    return "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4";
+  };
+
   return (
-    <div
-      className="grid gap-3 p-4 h-full w-full auto-rows-fr"
-      style={{
-        gridTemplateColumns:
-          tracks.length === 1
-            ? "1fr"
-            : tracks.length === 2
-            ? "repeat(2, 1fr)"
-            : tracks.length <= 4
-            ? "repeat(2, 1fr)"
-            : "repeat(auto-fit, minmax(280px, 1fr))"
-      }}
-    >
+    <div className={`grid ${getGridClasses()} gap-4 p-4 h-full w-full auto-rows-fr`}>
       {tracks.map((track) => {
         const metadata = track.participant.metadata
           ? JSON.parse(track.participant.metadata)
           : null;
         const name = metadata?.name || track.participant.identity;
+        const isScreenShare = track.source === Track.Source.ScreenShare;
 
         return (
           <div
             key={`${track.participant.identity}-${track.source}`}
-            className="bg-gradient-to-br from-zinc-900 to-zinc-800 rounded-2xl overflow-hidden flex items-center justify-center relative group shadow-xl"
+            className="relative bg-gradient-to-br from-zinc-900 to-zinc-800 rounded-2xl overflow-hidden group shadow-xl aspect-video"
           >
-            <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-all" />
-            <VideoTrack trackRef={track} className="w-full h-full object-cover" />
-            <div className="absolute bottom-3 left-3 bg-black/70 backdrop-blur-sm px-3 py-1.5 rounded-full text-sm text-white z-10 flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              {name}
+            {/* Video Feed */}
+            <div className="absolute inset-0">
+              <VideoTrack 
+                trackRef={track} 
+                className="w-full h-full object-cover"
+              />
+            </div>
+            
+            {/* Overlay gradient on hover */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            
+            {/* Participant Info */}
+            <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between z-10">
+              <div className="flex items-center gap-2 bg-black/70 backdrop-blur-sm px-3 py-1.5 rounded-full text-sm text-white">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="font-medium truncate max-w-[150px]">{name}</span>
+              </div>
+              
+              {/* Screen share indicator */}
+              {isScreenShare && (
+                <div className="bg-blue-500/80 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-medium text-white">
+                  Sharing Screen
+                </div>
+              )}
+            </div>
+
+            {/* Audio indicator */}
+            <div className="absolute top-3 right-3 bg-black/50 backdrop-blur-sm rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+              <FiMic size={12} className="text-green-400" />
             </div>
           </div>
         );
@@ -149,7 +172,7 @@ function ChatPanel({ isOpen, onClose }) {
             </div>
           ) : (
             chatMessages.map((msg, i) => (
-              <div key={i} className={`flex flex-col gap-1 animate-in fade-in slide-in-from-bottom-2 duration-300`}>
+              <div key={i} className="flex flex-col gap-1">
                 <div className="flex items-center gap-2">
                   <span className="font-bold text-[#adc6ff]">
                     {msg.from?.identity === "local" ? "You" : (msg.from?.identity || "Unknown")}

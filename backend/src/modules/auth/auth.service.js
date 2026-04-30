@@ -1,11 +1,65 @@
 import User from "../../models/user.model.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { OAuth2Client } from 'google-auth-library';
 import { AppError } from "../../utils/AppError.js";
 import {
   generateAccessToken,
   generateRefreshToken
 } from "../../utils/generateToken.js";
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+export const googleLogin = async (idToken) => {
+  if (!idToken) throw new AppError("Google token is required", 400);
+
+  try {
+    const ticket = await client.verifyIdToken({
+      idToken,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+    const { email, name, sub: googleId, picture } = payload;
+
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      user = await User.create({
+        name,
+        email,
+        googleId,
+        avatar: picture,
+        provider: "google"
+      });
+    } else {
+      // Update existing user with Google info if not present
+      let updated = false;
+      if (!user.googleId) {
+        user.googleId = googleId;
+        updated = true;
+      }
+      if (!user.avatar && picture) {
+        user.avatar = picture;
+        updated = true;
+      }
+      if (user.provider === "local") {
+        user.provider = "google";
+        updated = true;
+      }
+      if (updated) await user.save();
+    }
+
+    const accessToken = generateAccessToken(user);
+    const refreshToken = generateRefreshToken(user);
+
+    user.refreshToken = refreshToken;
+    await user.save();
+
+    return { user, accessToken, refreshToken };
+  } catch (error) {
+    throw new AppError("Google authentication failed: " + error.message, 401);
+  }
+};
 
 export const registerUser = async (data) => {
     const { name, email, password } = data;
@@ -44,6 +98,10 @@ export const loginUser = async (data) => {
   const user = await User.findOne({ email });
   if (!user) {
     throw new AppError("Invalid email or password", 401);
+  }
+
+  if (user.provider === "google") {
+    throw new AppError("This account uses Google Login. Please sign in with Google.", 401);
   }
 
   // compare password

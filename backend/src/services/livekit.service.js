@@ -6,6 +6,7 @@ export const generateLiveKitToken = async (roomName, userId, metadata = {}) => {
     process.env.LIVEKIT_API_SECRET,
     {
       identity: userId.toString(),
+      name: metadata.name || "",
       metadata: JSON.stringify(metadata)
     }
   );

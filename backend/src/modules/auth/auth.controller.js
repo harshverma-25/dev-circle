@@ -3,8 +3,38 @@ import {
   registerUser,
   loginUser,
   refreshAccessToken,
-  logoutUser
+  logoutUser,
+  googleLogin
 } from "./auth.service.js";
+
+export const googleAuth = async (req, res, next) => {
+  try {
+    const { token } = req.body;
+    const result = await googleLogin(token);
+
+    res
+      .cookie("refreshToken", result.refreshToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "none",
+        path: "/",
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+      })
+      .status(200)
+      .json({
+        success: true,
+        accessToken: result.accessToken,
+        user: {
+          id: result.user._id,
+          name: result.user.name,
+          email: result.user.email,
+          avatar: result.user.avatar
+        }
+      });
+  } catch (error) {
+    next(error);
+  }
+};
 
 export const register = async (req, res, next) => {
   try {

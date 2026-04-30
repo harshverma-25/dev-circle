@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import useAuthStore from "../../store/useAuthStore";
 import api from "../../lib/api";
+import { GoogleLogin } from "@react-oauth/google";
 
 export default function AuthPage() {
   const router = useRouter();
@@ -17,6 +18,24 @@ export default function AuthPage() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setLoading(true);
+    setError("");
+    try {
+      const { data } = await api.post("/api/auth/google", {
+        token: credentialResponse.credential
+      });
+      if (data.success) {
+        loginInStore(data.user, data.accessToken);
+        router.push("/interview");
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || "Google login failed");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -70,6 +89,32 @@ export default function AuthPage() {
                 : "Join the community and start practicing."}
             </p>
           </div>
+
+          {isLogin && (
+            <div className="mb-6 space-y-6">
+              <div className="flex justify-center">
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={() => {
+                    console.error("Google Login Error Component");
+                    setError("Google Login Failed to initialize. Check Client ID.");
+                  }}
+                  theme="filled_black"
+                  shape="pill"
+                  width="360"
+                />
+              </div>
+
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-white/10"></div>
+                </div>
+                <div className="relative flex justify-center text-[10px] uppercase tracking-widest font-bold">
+                  <span className="bg-[#1e1e1e] px-4 text-zinc-500">OR CONTINUE WITH EMAIL</span>
+                </div>
+              </div>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
             {!isLogin && (
@@ -136,6 +181,8 @@ export default function AuthPage() {
               {loading ? "AUTHENTICATING..." : isLogin ? "SIGN IN" : "CREATE ACCOUNT"}
             </button>
           </form>
+
+
 
           {/* TOGGLE SWITCH */}
           <div className="mt-8 text-center">

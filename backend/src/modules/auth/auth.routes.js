@@ -1,6 +1,6 @@
 import express from "express";
 import { body } from "express-validator";
-import { register, login, refreshToken, logout } from "./auth.controller.js";
+import { register, login, refreshToken, logout, googleAuth } from "./auth.controller.js";
 import { validate } from "../../middleware/validate.middleware.js";
 
 const router = express.Router();
@@ -20,5 +20,6 @@ router.post("/register", registerRules, validate, register);
 router.post("/login", loginRules, validate, login);
 router.get("/refresh", refreshToken);
 router.post("/logout", logout);
+router.post("/google", googleAuth);
 
 export default router;

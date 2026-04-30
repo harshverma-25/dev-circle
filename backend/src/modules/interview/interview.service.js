@@ -270,11 +270,13 @@ export const joinInterview = async (interviewId, userId) => {
   }
 
   const roomName = interview._id.toString();
+  const user = await User.findById(userId);
 
   // ✅ use service (clean + safe)
   const token = await generateLiveKitToken(
     roomName,
-    userId.toString()
+    userId.toString(),
+    { name: user?.name || "Anonymous" }
   );
 
   return {

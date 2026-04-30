@@ -13,6 +13,20 @@ const nextConfig = {
     }
     return config;
   },
+
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'Cross-Origin-Opener-Policy',
+            value: 'same-origin-allow-popups', // Required for Google OAuth
+          },
+        ],
+      },
+    ];
+  },
   
   // outputFileTracingExcludes removed to avoid breaking serverless deployments
 };

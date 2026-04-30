@@ -11,6 +11,7 @@ import {
 export default function ApplyModal({ interview, onClose }) {
   const [tab, setTab]               = useState("url");   // "url" | "file"
   const [resumeUrl, setResumeUrl]   = useState("");
+  const [message, setMessage]       = useState("");
   const [file, setFile]             = useState(null);
   const [uploading, setUploading]   = useState(false);
   const [uploadError, setUploadError] = useState("");
@@ -68,6 +69,7 @@ export default function ApplyModal({ interview, onClose }) {
         resumeUrl:          resumeUrl.trim(),
         resumeType:         "link",
         cloudinaryPublicId: null,
+        message:            message.trim(),
       }, { onSuccess: onClose });
     } else {
       // File upload flow
@@ -81,6 +83,7 @@ export default function ApplyModal({ interview, onClose }) {
           resumeUrl:          result.url,
           resumeType:         "file",
           cloudinaryPublicId: result.publicId,
+          message:            message.trim(),
         }, { onSuccess: onClose });
       } catch (err) {
         setUploadError(err?.response?.data?.message || "Upload failed. Try again.");
@@ -263,6 +266,23 @@ export default function ApplyModal({ interview, onClose }) {
               </div>
             </div>
           )}
+
+          {/* Introduce yourself */}
+          <div className="mt-4">
+            <label className="block text-zinc-300 text-xs font-semibold uppercase tracking-wider mb-2">
+              Introduce Yourself
+            </label>
+            <textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Tell the host why you're a good fit..."
+              rows={3}
+              className="w-full bg-zinc-800/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-zinc-600 outline-none focus:border-[#adc6ff]/50 focus:ring-1 focus:ring-[#adc6ff]/50 transition-all resize-none"
+            />
+            <p className="text-[10px] text-zinc-500 mt-1 text-right">
+              {message.length}/500
+            </p>
+          </div>
 
           {/* Errors */}
           {(uploadError || serverError) && (

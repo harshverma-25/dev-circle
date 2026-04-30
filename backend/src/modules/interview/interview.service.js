@@ -103,7 +103,7 @@ export const getInterviewById = async (interviewId) => {
 // ─── Apply to Interview ──────────────────────────────────────────────────────
 
 export const applyToInterview = async (interviewId, userId, resumeData) => {
-  const { resumeUrl, resumeType = "link", cloudinaryPublicId = null } = resumeData;
+  const { resumeUrl, resumeType = "link", cloudinaryPublicId = null, message = "" } = resumeData;
 
   const interview = await Interview.findById(interviewId);
   if (!interview) throw new AppError("Interview not found", 404);
@@ -131,6 +131,7 @@ export const applyToInterview = async (interviewId, userId, resumeData) => {
     resumeUrl,
     resumeType,
     cloudinaryPublicId,
+    message,
     status: "pending"
   });
 

@@ -37,6 +37,13 @@ const applicationSchema = new mongoose.Schema(
       type: String,
       enum: ["pending", "accepted", "rejected"],
       default: "pending"
+    },
+
+    // Candidate intro / message to host
+    message: {
+      type: String,
+      trim: true,
+      maxLength: 500
     }
   },
   { timestamps: true }

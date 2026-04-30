@@ -1,13 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   LiveKitRoom,
   RoomAudioRenderer,
   useTracks,
   VideoTrack,
-  useRoomContext
+  useRoomContext,
+  useChat
 } from "@livekit/components-react";
 import { Track } from "livekit-client";
 
@@ -98,11 +99,23 @@ function VideoGrid() {
 // ================= CHAT PANEL =================
 function ChatPanel({ isOpen, onClose }) {
   const [message, setMessage] = useState("");
+  const { chatMessages, send } = useChat();
+  const scrollRef = useRef(null);
 
-  const handleSend = () => {
-    if (message.trim()) {
-      // Chat logic will go here when implemented
-      setMessage("");
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [chatMessages]);
+
+  const handleSend = async () => {
+    if (message.trim() && send) {
+      try {
+        await send(message);
+        setMessage("");
+      } catch (err) {
+        console.error("Failed to send message:", err);
+      }
     }
   };
 
@@ -125,11 +138,34 @@ function ChatPanel({ isOpen, onClose }) {
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-3 text-sm">
-          <div className="text-center text-zinc-600 py-8">
-            <p>No messages yet</p>
-            <p className="text-xs mt-1">Be the first to send a message</p>
-          </div>
+        <div 
+          ref={scrollRef}
+          className="flex-1 overflow-y-auto p-4 space-y-4 text-sm scroll-smooth"
+        >
+          {chatMessages.length === 0 ? (
+            <div className="text-center text-zinc-600 py-8">
+              <p>No messages yet</p>
+              <p className="text-xs mt-1">Be the first to send a message</p>
+            </div>
+          ) : (
+            chatMessages.map((msg, i) => (
+              <div key={i} className={`flex flex-col gap-1 animate-in fade-in slide-in-from-bottom-2 duration-300`}>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-[#adc6ff]">
+                    {msg.from?.identity === "local" ? "You" : (msg.from?.identity || "Unknown")}
+                  </span>
+                  <span className="text-[10px] text-zinc-500">
+                    {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+                <div className="bg-white/5 border border-white/5 px-3 py-2 rounded-2xl rounded-tl-none inline-block max-w-[90%]">
+                  <p className="text-zinc-300 leading-relaxed break-words">
+                    {msg.message}
+                  </p>
+                </div>
+              </div>
+            ))
+          )}
         </div>
 
         <div className="p-4 border-t border-white/10 bg-black/20">

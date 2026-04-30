@@ -1,161 +1,309 @@
 "use client";
 
 import Layout from "../components/Layout";
-import React from "react";
+import Link from "next/link";
+import { useState, useEffect } from "react";
+import { 
+  FiVideo, FiUsers, FiArrowRight, FiCheckCircle, 
+  FiShield, FiRefreshCw, FiDatabase, FiTrendingUp,
+  FiZap, FiStar, FiActivity, FiCalendar, FiAward,
+  FiCode, FiMessageCircle, FiBell, FiPlay, FiClock,
+  FiBarChart2, FiUserPlus, FiGithub, FiLinkedin
+} from "react-icons/fi";
 
 export default function Home() {
+  const [activeTestimonial, setActiveTestimonial] = useState(0);
+  
+  const testimonials = [
+    { name: "Sarah Chen", role: "Senior Frontend Engineer", text: "DevCircle helped me land my dream job at Google. The real-time practice sessions were invaluable!", rating: 5, image: "SC" },
+    { name: "Alex Kumar", role: "Full Stack Developer", text: "The peer feedback system is incredible. I've improved my system design skills dramatically.", rating: 5, image: "AK" },
+    { name: "Maria Garcia", role: "Tech Lead", text: "Best platform for interview prep. The community is supportive and the sessions are high quality.", rating: 5, image: "MG" },
+  ];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveTestimonial((prev) => (prev + 1) % testimonials.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <Layout>
-      {/* Required for the icons used in your HTML design */}
-      <link
-        rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
-      />
+      {/* Animated Background */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
+        <div className="absolute top-0 -left-40 w-80 h-80 bg-[#adc6ff]/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-0 -right-40 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-blue-500/5 rounded-full blur-3xl"></div>
+      </div>
 
-      <div className="space-y-12 pb-20">
-        {/* HERO SECTION */}
-        <section className="relative h-[480px] rounded-[2.5rem] overflow-hidden flex items-center px-12 border border-white/5">
-          {/* Background Image & Gradient */}
-          <div className="absolute inset-0 z-0">
-            <img
-              alt="Tech Background"
-              className="w-full h-full object-cover opacity-40 grayscale"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuDvrouNFjlULhTYC8pAmAS1fGcLn9vcjV5k442BfB12qWftdcugQqYX8SES-Y9ziQQ10lLPvqNBVjk8EK2aMXjaOdV_Lnuto_mIRBN_ULQh967_NclNAomgPqPwTq0NXXpfHs1pSowWX0ldAG_6mIXuM8If6SqXdmXnofnRBXd7faykrHMmc1E1uQlKm6Vgri7M9QmOXvroQiq3mtCP1rMy4HZWKURQx_z1la89YlzflRmY1FoczusWCLtS9cCdfUGOxPolXreTFw" 
-            />
-            <div className="absolute inset-0 bg-gradient-to-r from-[#131313] via-[#131313]/70 to-transparent"></div>
-          </div>
-
-          <div className="relative z-10 max-w-2xl">
-            <span className="inline-block px-4 py-1.5 rounded-full bg-[#adc6ff]/10 border border-[#adc6ff]/20 text-[#adc6ff] text-[10px] font-bold tracking-[0.2em] mb-8 uppercase">
-              Collaborative Prep
-            </span>
-            <h1 className="text-6xl font-bold text-white mb-6 leading-[1.1] tracking-tight">
-              Practice Together. <br />
-              <span className="text-[#adc6ff]">Grow Together.</span>
-            </h1>
-            <p className="text-lg text-zinc-400 mb-10 max-w-lg leading-relaxed">
-              DevCircle helps developers practice real interviews together through live, peer-to-peer sessions. Host, join, and learn in a continuous community loop.
-            </p>
-            <div className="flex gap-4">
-              <button className="bg-[#adc6ff] text-[#002e6a] px-8 py-4 rounded-2xl font-bold text-lg hover:brightness-110 shadow-[0_10px_40px_rgba(173,198,255,0.3)] transition-all active:scale-95">
-                Join a Session
-              </button>
-              <button className="bg-white/5 backdrop-blur-md border border-white/10 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:bg-white/10 transition-all active:scale-95">
-                Host an Interview
-              </button>
-            </div>
-          </div>
-        </section>
-
-        {/* FEATURE BENTO GRID */}
-        <section className="grid grid-cols-12 gap-8">
-          
-          {/* Main Card: Live Interview System */}
-          <div className="col-span-12 lg:col-span-7 bg-[#1e1e1e]/60 backdrop-blur-xl border border-white/10 rounded-[2.5rem] p-10 flex flex-col justify-between group hover:border-[#adc6ff]/30 transition-all">
-            <div>
-              <div className="w-14 h-14 bg-[#4edea3]/10 rounded-2xl flex items-center justify-center mb-8 border border-[#4edea3]/20">
-                <span className="material-symbols-outlined text-[#4edea3] text-3xl">stadium</span>
+      <div className="space-y-20 md:space-y-28 pb-20 relative">
+        
+        {/* HERO SECTION - Modern Split Layout */}
+        <section className="relative min-h-[90vh] flex items-center">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            {/* Left Content */}
+            <div className="space-y-6">
+              <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-gradient-to-r from-[#adc6ff]/10 to-purple-500/10 border border-[#adc6ff]/20 backdrop-blur-sm animate-fadeIn">
+                <div className="w-2 h-2 bg-[#adc6ff] rounded-full animate-pulse"></div>
+                <span className="text-xs font-bold tracking-wider text-[#adc6ff] uppercase">🚀 Live Platform Now Active</span>
               </div>
-              <h2 className="text-4xl font-bold text-white mb-6">Live Interview System</h2>
-              <p className="text-zinc-400 text-lg leading-relaxed max-w-md">
-                Robust collaborative coding environment with integrated video, shared whiteboards, and real-time execution.
+              
+              <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.1] tracking-tight">
+                <span className="text-white">Master Technical</span>
+                <br />
+                <span className="bg-gradient-to-r from-[#adc6ff] via-purple-400 to-[#adc6ff] bg-clip-text text-transparent animate-gradient">
+                  Interviews Together
+                </span>
+              </h1>
+              
+              <p className="text-lg md:text-xl text-zinc-400 leading-relaxed max-w-lg">
+                Join a community of developers practicing real interviews through live, peer-to-peer sessions. Learn, grow, and succeed together.
               </p>
-            </div>
+              
+              <div className="flex flex-col sm:flex-row gap-4 pt-4">
+                <Link
+                  href="/interview"
+                  className="group relative overflow-hidden inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#adc6ff] to-[#8eaeff] text-[#002e6a] px-8 py-4 rounded-xl font-bold text-lg hover:shadow-2xl hover:shadow-[#adc6ff]/40 transition-all duration-300"
+                >
+                  <span className="relative z-10">Start Practicing</span>
+                  <FiPlay className="relative z-10 group-hover:translate-x-1 transition-transform" size={18} />
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500"></div>
+                </Link>
+                
+                <Link
+                  href="/interview"
+                  className="inline-flex items-center justify-center gap-2 bg-white/5 backdrop-blur border border-white/10 text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-white/10 hover:border-white/20 transition-all duration-300"
+                >
+                  <FiUsers size={18} />
+                  Host Session
+                </Link>
+              </div>
 
-            <div className="flex items-center justify-between mt-10">
-              <div className="flex -space-x-4">
-                {[1, 2, 3].map((i) => (
-                  <img
-                    key={i}
-                    className="w-12 h-12 rounded-full border-4 border-[#1e1e1e] bg-zinc-800"
-                    src={`https://i.pravatar.cc/150?u=${i}`}
-                    alt="user"
-                  />
-                ))}
-                <div className="w-12 h-12 rounded-full bg-[#1c1b1b] border-4 border-[#1e1e1e] flex items-center justify-center text-xs font-black text-zinc-400">
-                  +241
+              {/* Stats */}
+              <div className="flex flex-wrap gap-8 pt-8">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-[#4edea3]/10 flex items-center justify-center">
+                    <FiUsers className="text-[#4edea3]" size={20} />
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-white">500+</div>
+                    <div className="text-xs text-zinc-500">Active Members</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-[#adc6ff]/10 flex items-center justify-center">
+                    <FiActivity className="text-[#adc6ff]" size={20} />
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-white">1,200+</div>
+                    <div className="text-xs text-zinc-500">Sessions Completed</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center">
+                    <FiStar className="text-purple-400" size={20} />
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-white">98%</div>
+                    <div className="text-xs text-zinc-500">Satisfaction Rate</div>
+                  </div>
                 </div>
               </div>
-              <a className="text-[#adc6ff] flex items-center gap-2 font-bold group-hover:gap-4 transition-all text-lg">
-                View Live Lobby <span className="material-symbols-outlined">arrow_forward</span>
-              </a>
+            </div>
+
+            {/* Right - Animated Card */}
+            <div className="relative hidden lg:block">
+              <div className="relative bg-gradient-to-br from-zinc-900/80 to-black border border-white/10 rounded-2xl p-6 backdrop-blur-xl transform rotate-3 hover:rotate-0 transition-all duration-500">
+                <div className="absolute -top-3 -right-3 w-20 h-20 bg-gradient-to-r from-[#adc6ff] to-purple-500 rounded-full blur-2xl opacity-30"></div>
+                <div className="flex items-center gap-3 mb-4 pb-4 border-b border-white/10">
+                  <div className="flex gap-1.5">
+                    <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                    <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                  </div>
+                  <div className="flex-1 text-center">
+                    <span className="text-[10px] font-mono text-zinc-500">live-session.tsx</span>
+                  </div>
+                </div>
+                <div className="space-y-2 font-mono text-sm">
+                  <div className="text-[#adc6ff]">// Live Interview Session</div>
+                  <div className="text-white">
+                    <span className="text-pink-400">const</span> session = <span className="text-blue-400">new</span> <span className="text-yellow-400">LiveSession</span>();
+                  </div>
+                  <div className="text-white">
+                    session.<span className="text-green-400">join</span>({`{`}
+                    <span className="text-orange-400">role</span>: <span className="text-green-400">'candidate'</span>
+                    {`}`});
+                  </div>
+                  <div className="text-zinc-500">// Real-time collaboration started</div>
+                  <div className="text-white">
+                    <span className="text-blue-400">await</span> session.<span className="text-green-400">startInterview</span>();
+                  </div>
+                  <div className="mt-4 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                      <span className="text-green-400 text-xs">4 participants online</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="absolute -bottom-5 -left-5 w-32 h-32 bg-[#adc6ff]/10 rounded-full blur-2xl"></div>
             </div>
           </div>
-
-          {/* Secondary Card: Resume Intelligence */}
-          <div className="col-span-12 lg:col-span-5 bg-[#1e1e1e]/60 backdrop-blur-xl border border-white/10 rounded-[2.5rem] p-10 flex flex-col group hover:border-[#adc6ff]/30 transition-all">
-            <div className="w-14 h-14 bg-[#adc6ff]/10 rounded-2xl flex items-center justify-center mb-8 border border-[#adc6ff]/20">
-              <span className="material-symbols-outlined text-[#adc6ff] text-3xl">psychology</span>
-            </div>
-            <h2 className="text-4xl font-bold text-white mb-6">Resume Intelligence</h2>
-            <p className="text-zinc-400 text-lg leading-relaxed mb-10">
-              Get instant AI-powered feedback on your resume. Optimize for ATS and highlight impact.
-            </p>
-            <div className="mt-auto bg-[#1c1b1b] rounded-3xl p-6 border border-white/5 space-y-4">
-              <div className="flex justify-between text-xs font-bold uppercase tracking-wider">
-                <span className="text-zinc-500">AI Optimization Score</span>
-                <span className="text-[#adc6ff]">94%</span>
-              </div>
-              <div className="h-2 w-full bg-zinc-800 rounded-full overflow-hidden">
-                <div className="h-full bg-[#adc6ff] w-[94%]"></div>
-              </div>
-              <p className="text-[11px] text-zinc-500 italic leading-relaxed">
-                "ATS match high for Senior Backend roles. Suggesting more impact-driven metrics."
-              </p>
-            </div>
-          </div>
-
-          {/* Bottom Row Small Cards */}
-          {[
-            { title: "Smart Access", desc: "Granular control over who can join your practice rooms.", icon: "shield" },
-            { title: "The Loop", desc: "A data-driven feedback cycle where you learn by switching roles.", icon: "sync" },
-            { title: "Shared Library", desc: "Access a community-vetted database of real interview questions.", icon: "database" }
-          ].map((item) => (
-            <div key={item.title} className="col-span-12 md:col-span-4 bg-[#1e1e1e]/60 backdrop-blur-xl border border-white/10 rounded-[2rem] p-8">
-              <span className="material-symbols-outlined text-zinc-500 mb-4">{item.icon}</span>
-              <h3 className="text-xl font-bold text-white mb-3">{item.title}</h3>
-              <p className="text-zinc-500 text-sm leading-relaxed">{item.desc}</p>
-            </div>
-          ))}
         </section>
 
-        {/* ABOUT SECTION */}
-        <section className="grid md:grid-cols-2 gap-16 items-center pt-10">
-          <div className="relative rounded-[2.5rem] border border-white/10 overflow-hidden aspect-square flex items-center justify-center bg-gradient-to-br from-[#003824]/30 to-black">
-             <img 
-              src="https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&q=80" 
-              className="absolute inset-0 w-full h-full object-cover opacity-20"
-              alt="Code background"
-             />
-             <div className="text-center relative z-10">
-                <p className="text-zinc-500 text-xs uppercase tracking-[0.3em] mb-3">About Platform</p>
-                <h3 className="text-5xl font-black text-white/90">Safe work</h3>
-             </div>
+        {/* FEATURE SECTION - Modern Grid */}
+        <section>
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 mb-4">
+              <FiZap className="text-[#adc6ff]" size={14} />
+              <span className="text-xs font-bold tracking-wider text-zinc-400 uppercase">Why Choose DevCircle</span>
+            </div>
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4">
+              Built for{" "}
+              <span className="bg-gradient-to-r from-[#adc6ff] to-purple-400 bg-clip-text text-transparent">
+                Modern Developers
+              </span>
+            </h2>
+            <p className="text-zinc-400 text-lg max-w-2xl mx-auto">
+              Everything you need to ace your technical interviews
+            </p>
           </div>
 
-          <div className="space-y-10">
-            <h2 className="text-5xl font-bold text-white tracking-tight">Why DevCircle?</h2>
-            <p className="text-zinc-400 text-xl leading-relaxed">
-              Traditional interview platforms focus on solo grinding. DevCircle recognizes that interviewing is a social skill.
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[
+              {
+                icon: FiVideo,
+                title: "Live Interview System",
+                desc: "Real-time video, code editor, and whiteboard collaboration",
+                color: "from-blue-500/20 to-blue-500/5",
+                iconColor: "text-blue-400",
+                stats: "500+ active sessions"
+              },
+              {
+                icon: FiTrendingUp,
+                title: "AI Resume Analysis",
+                desc: "Get instant feedback and ATS optimization tips",
+                color: "from-purple-500/20 to-purple-500/5",
+                iconColor: "text-purple-400",
+                stats: "94% match rate"
+              },
+              {
+                icon: FiShield,
+                title: "Smart Access Control",
+                desc: "Granular permissions for secure practice sessions",
+                color: "from-emerald-500/20 to-emerald-500/5",
+                iconColor: "text-emerald-400",
+                stats: "End-to-end encrypted"
+              },
+             
+            ].map((feature, idx) => (
+              <div
+                key={idx}
+                className="group relative bg-gradient-to-br from-zinc-900/50 to-black border border-white/10 rounded-2xl p-6 hover:border-[#adc6ff]/30 transition-all duration-300 hover:-translate-y-2"
+              >
+                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
+                  <feature.icon className={`${feature.iconColor} text-2xl`} />
+                </div>
+                <h3 className="text-xl font-bold text-white mb-2">{feature.title}</h3>
+                <p className="text-zinc-500 text-sm leading-relaxed mb-3">{feature.desc}</p>
+                <div className="inline-flex items-center gap-1.5 text-xs text-[#adc6ff]">
+                  <FiBarChart2 size={12} />
+                  <span>{feature.stats}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* HOW IT WORKS */}
+        <section className="bg-gradient-to-br from-zinc-900/30 to-black border border-white/10 rounded-3xl p-8 md:p-12">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              How <span className="text-[#adc6ff]">DevCircle</span> Works
+            </h2>
+            <p className="text-zinc-400 text-lg">Three simple steps to master your interviews</p>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              { step: "01", title: "Join Community", desc: "Sign up and connect with developers at similar skill levels", icon: FiUserPlus, color: "from-blue-500/20 to-blue-500/5" },
+              { step: "02", title: "Practice Live", desc: "Join or host sessions with real-time collaboration tools", icon: FiVideo, color: "from-purple-500/20 to-purple-500/5" },
+              { step: "03", title: "Get Feedback", desc: "Receive instant feedback and track your progress", icon: FiMessageCircle, color: "from-emerald-500/20 to-emerald-500/5" }
+            ].map((item, idx) => (
+              <div key={idx} className="relative text-center group">
+                <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br ${item.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <item.icon className="text-[#adc6ff] text-3xl" />
+                </div>
+                <div className="text-6xl font-bold text-white/5 absolute top-0 right-0 group-hover:scale-110 transition-transform"> {item.step}</div>
+                <h3 className="text-xl font-bold text-white mb-2">{item.title}</h3>
+                <p className="text-zinc-500 text-sm">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+      
+
+        {/* CTA SECTION - Bold */}
+        <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#adc6ff]/10 via-purple-500/10 to-[#adc6ff]/10 border border-white/10 p-12 text-center">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-[#adc6ff]/20 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+          
+          <div className="relative z-10">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4">
+              Ready to <span className="text-[#adc6ff]">Level Up</span> Your Interview Skills?
+            </h2>
+            <p className="text-zinc-400 text-lg mb-8 max-w-2xl mx-auto">
+              Join thousands of developers who are already improving their interview skills with DevCircle
             </p>
-            <ul className="space-y-8">
-              {[
-                { t: "Peer-to-Peer Focus", d: "Real-time sessions with peers in the trenches." },
-                { t: "Community Learning Loop", d: "Gain unique insights by switching roles." },
-                { t: "Reputation Economy", d: "Get recognized for your technical insight." }
-              ].map((item) => (
-                <li key={item.t} className="flex gap-6 items-start group">
-                  <span className="material-symbols-outlined text-[#adc6ff] text-3xl transition-transform group-hover:scale-110">check_circle</span>
-                  <div>
-                    <h4 className="text-white text-xl font-bold mb-1">{item.t}</h4>
-                    <p className="text-zinc-500 text-base leading-relaxed">{item.d}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link
+                href="/interview"
+                className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#adc6ff] to-[#8eaeff] text-[#002e6a] px-8 py-4 rounded-xl font-bold text-lg hover:shadow-2xl hover:shadow-[#adc6ff]/40 transition-all transform hover:scale-105"
+              >
+                Get Started Free
+                <FiArrowRight size={18} />
+              </Link>
+              <Link
+                href="/interview"
+                className="inline-flex items-center justify-center gap-2 bg-white/5 border border-white/10 text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-white/10 transition-all"
+              >
+                View Live Sessions
+                <FiUsers size={18} />
+              </Link>
+            </div>
           </div>
         </section>
       </div>
+
+      <style jsx>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        @keyframes gradient {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.6s ease-out;
+        }
+        .animate-gradient {
+          background-size: 200% auto;
+          animation: gradient 3s linear infinite;
+        }
+        .delay-1000 {
+          animation-delay: 1s;
+        }
+      `}</style>
     </Layout>
   );
 }

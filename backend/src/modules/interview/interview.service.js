@@ -241,8 +241,11 @@ export const cancelInterview = async (interviewId, userId) => {
 // ─── Join Interview ──────────────────────────────────────────────────────────
 
 export const joinInterview = async (interviewId, userId) => {
-  const interview = await Interview.findById(interviewId);
-  if (!interview) throw new AppError("Interview not found", 404);
+  let interview = await Interview.findById(interviewId);
+
+  if (!interview) {
+    throw new AppError("Interview not found", 404);
+  }
 
   interview = await checkAndApplyInterviewState(interview);
 
@@ -250,45 +253,31 @@ export const joinInterview = async (interviewId, userId) => {
     throw new AppError(`Interview is currently ${interview.status}`, 400);
   }
 
-  // Time window check: current time < scheduledAt + duration
-  const endTime = new Date(new Date(interview.scheduledAt).getTime() + interview.duration * 60 * 1000);
-  if (new Date() > endTime) {
-    throw new AppError("Interview session has expired", 403);
-  }
-
-  const isHost = interview.createdBy.toString() === userId;
+  const isHost =
+    interview.createdBy &&
+    interview.createdBy.toString() === userId.toString();
 
   if (!isHost) {
-    // Candidate must have an accepted application
-    const application = await Application.findOne({ interviewId, userId });
+    const application = await Application.findOne({
+      interviewId,
+      userId
+    });
 
-    if (!application) throw new AppError("You have not applied for this interview", 400);
-
-    if (application.status === "rejected") {
-      throw new AppError("Your application was not accepted", 403);
-    }
-
-    if (application.status === "pending") {
-      throw new AppError("Your application is still pending review", 403);
+    if (!application || application.status !== "accepted") {
+      throw new AppError("You are not allowed to join this interview", 403);
     }
   }
 
-  // Track active participants
-  await Participant.findOneAndUpdate(
-    { interviewId, userId },
-    { isActive: true, lastSeen: new Date() },
-    { upsert: true, new: true }
+  const roomName = interview._id.toString();
+
+  // ✅ use service (clean + safe)
+  const token = await generateLiveKitToken(
+    roomName,
+    userId.toString()
   );
-
-  // Get user details for metadata
-  const user = await User.findById(userId);
-  if (!user) throw new AppError("User not found", 404);
-
-  const token = await generateLiveKitToken(interview.roomName, userId, { name: user.name });
 
   return {
     token,
-    roomName: interview.roomName,
     url: process.env.LIVEKIT_URL,
   };
 };

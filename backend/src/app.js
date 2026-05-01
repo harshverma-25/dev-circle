@@ -25,7 +25,7 @@ app.use(cors({
   origin: [
     "http://localhost:3000",
     "http://localhost:3001",
-    process.env.FRONTEND_URL
+    "https://devcircle-dev.vercel.app"
   ].filter(Boolean),
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],

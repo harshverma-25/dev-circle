@@ -97,11 +97,13 @@ export default function AuthPage() {
                   onSuccess={handleGoogleSuccess}
                   onError={() => {
                     console.error("Google Login Error Component");
-                    setError("Google Login Failed to initialize. Check Client ID.");
+                    setError("Google Login Failed to initialize. Check Client ID or Origin.");
                   }}
                   theme="filled_black"
                   shape="pill"
                   width="360"
+                  text="signin_with"
+                  locale="en"
                 />
               </div>
 

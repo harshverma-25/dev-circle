@@ -23,6 +23,10 @@ const nextConfig = {
             key: 'Cross-Origin-Opener-Policy',
             value: 'same-origin-allow-popups', // Required for Google OAuth
           },
+          {
+            key: 'Referrer-Policy',
+            value: 'no-referrer-when-downgrade', // Required to retain origin on redirection
+          },
         ],
       },
     ];

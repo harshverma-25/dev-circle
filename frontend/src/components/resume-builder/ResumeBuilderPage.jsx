@@ -8,6 +8,10 @@ import ResumePreviewPanel from "./ResumePreviewPanel";
 /* ── Top bar ─────────────────────────────────────────────────────────────── */
 
 function BuilderTopBar() {
+  const handlePrint = () => {
+    window.print();
+  };
+
   return (
     <header
       id="builder-topbar"
@@ -17,6 +21,7 @@ function BuilderTopBar() {
         bg-[#0f0f13]/95 backdrop-blur-md
         border-b border-white/[0.06]
         z-20
+        print:hidden
       "
     >
       {/* Left: back + brand */}
@@ -48,13 +53,14 @@ function BuilderTopBar() {
       <div className="flex items-center gap-2">
         <button
           id="btn-topbar-save"
-          className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 text-zinc-400 text-xs hover:text-white hover:border-white/20 transition-all"
+          className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 text-zinc-400 text-xs hover:text-white hover:border-white/20 transition-all cursor-pointer"
         >
           Save Draft
         </button>
         <button
           id="btn-topbar-export"
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-[#adc6ff] to-[#c9b1ff] text-[#0a0a14] text-xs font-semibold hover:opacity-90 active:scale-[0.98] transition-all"
+          onClick={handlePrint}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-[#adc6ff] to-[#c9b1ff] text-[#0a0a14] text-xs font-semibold hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer"
         >
           Export PDF
         </button>

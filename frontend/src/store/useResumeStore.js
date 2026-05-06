@@ -1,63 +1,168 @@
 import { create } from "zustand";
 
+const newId = () =>
+  `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+
 const defaultResume = {
   personal: {
-    name: "",
+    fullName: "",
+    role: "",
     email: "",
     phone: "",
     location: "",
-    website: "",
     linkedin: "",
+    github: "",
+    portfolio: "",
   },
   summary: "",
+  skills: {
+    languages: [],
+    frontend: [],
+    backend: [],
+    database: [],
+    tools: [],
+  },
   experience: [],
   education: [],
-  skills: [],
   projects: [],
+  achievements: [],
 };
 
 const useResumeStore = create((set) => ({
   resume: defaultResume,
 
-  // ── Personal ────────────────────────────────────────────────────────────────
+  // ── Personal ──────────────────────────────────────────────────────────────
   setPersonal: (data) =>
-    set((state) => ({
-      resume: { ...state.resume, personal: { ...state.resume.personal, ...data } },
+    set((s) => ({
+      resume: { ...s.resume, personal: { ...s.resume.personal, ...data } },
     })),
 
-  // ── Summary ─────────────────────────────────────────────────────────────────
+  // ── Summary ───────────────────────────────────────────────────────────────
   setSummary: (summary) =>
-    set((state) => ({ resume: { ...state.resume, summary } })),
+    set((s) => ({ resume: { ...s.resume, summary } })),
 
-  // ── Experience ──────────────────────────────────────────────────────────────
-  addExperience: (entry) =>
-    set((state) => ({
-      resume: { ...state.resume, experience: [...state.resume.experience, entry] },
+  // ── Skills ────────────────────────────────────────────────────────────────
+  setSkillCategory: (category, skills) =>
+    set((s) => ({
+      resume: {
+        ...s.resume,
+        skills: { ...s.resume.skills, [category]: skills },
+      },
     })),
-  setExperience: (experience) =>
-    set((state) => ({ resume: { ...state.resume, experience } })),
 
-  // ── Education ───────────────────────────────────────────────────────────────
-  addEducation: (entry) =>
-    set((state) => ({
-      resume: { ...state.resume, education: [...state.resume.education, entry] },
+  // ── Experience ────────────────────────────────────────────────────────────
+  addExperience: () =>
+    set((s) => ({
+      resume: {
+        ...s.resume,
+        experience: [
+          ...s.resume.experience,
+          { id: newId(), company: "", role: "", duration: "", location: "", bullets: [] },
+        ],
+      },
     })),
-  setEducation: (education) =>
-    set((state) => ({ resume: { ...state.resume, education } })),
-
-  // ── Skills ──────────────────────────────────────────────────────────────────
-  setSkills: (skills) =>
-    set((state) => ({ resume: { ...state.resume, skills } })),
-
-  // ── Projects ─────────────────────────────────────────────────────────────────
-  addProject: (entry) =>
-    set((state) => ({
-      resume: { ...state.resume, projects: [...state.resume.projects, entry] },
+  updateExperience: (id, data) =>
+    set((s) => ({
+      resume: {
+        ...s.resume,
+        experience: s.resume.experience.map((e) =>
+          e.id === id ? { ...e, ...data } : e
+        ),
+      },
     })),
-  setProjects: (projects) =>
-    set((state) => ({ resume: { ...state.resume, projects } })),
+  removeExperience: (id) =>
+    set((s) => ({
+      resume: {
+        ...s.resume,
+        experience: s.resume.experience.filter((e) => e.id !== id),
+      },
+    })),
 
-  // ── Reset ────────────────────────────────────────────────────────────────────
+  // ── Education ─────────────────────────────────────────────────────────────
+  addEducation: () =>
+    set((s) => ({
+      resume: {
+        ...s.resume,
+        education: [
+          ...s.resume.education,
+          { id: newId(), institution: "", degree: "", duration: "", grade: "" },
+        ],
+      },
+    })),
+  updateEducation: (id, data) =>
+    set((s) => ({
+      resume: {
+        ...s.resume,
+        education: s.resume.education.map((e) =>
+          e.id === id ? { ...e, ...data } : e
+        ),
+      },
+    })),
+  removeEducation: (id) =>
+    set((s) => ({
+      resume: {
+        ...s.resume,
+        education: s.resume.education.filter((e) => e.id !== id),
+      },
+    })),
+
+  // ── Projects ──────────────────────────────────────────────────────────────
+  addProject: () =>
+    set((s) => ({
+      resume: {
+        ...s.resume,
+        projects: [
+          ...s.resume.projects,
+          { id: newId(), title: "", techStack: "", liveLink: "", githubLink: "", bullets: [] },
+        ],
+      },
+    })),
+  updateProject: (id, data) =>
+    set((s) => ({
+      resume: {
+        ...s.resume,
+        projects: s.resume.projects.map((p) =>
+          p.id === id ? { ...p, ...data } : p
+        ),
+      },
+    })),
+  removeProject: (id) =>
+    set((s) => ({
+      resume: {
+        ...s.resume,
+        projects: s.resume.projects.filter((p) => p.id !== id),
+      },
+    })),
+
+  // ── Achievements ──────────────────────────────────────────────────────────
+  addAchievement: () =>
+    set((s) => ({
+      resume: {
+        ...s.resume,
+        achievements: [
+          ...s.resume.achievements,
+          { id: newId(), title: "", description: "", link: "" },
+        ],
+      },
+    })),
+  updateAchievement: (id, data) =>
+    set((s) => ({
+      resume: {
+        ...s.resume,
+        achievements: s.resume.achievements.map((a) =>
+          a.id === id ? { ...a, ...data } : a
+        ),
+      },
+    })),
+  removeAchievement: (id) =>
+    set((s) => ({
+      resume: {
+        ...s.resume,
+        achievements: s.resume.achievements.filter((a) => a.id !== id),
+      },
+    })),
+
+  // ── Reset ─────────────────────────────────────────────────────────────────
   resetResume: () => set({ resume: defaultResume }),
 }));
 

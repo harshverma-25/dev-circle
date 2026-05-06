@@ -1,15 +1,21 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { FiArrowLeft, FiFileText } from "react-icons/fi";
+import { FiArrowLeft, FiFileText, FiEdit3, FiEye } from "react-icons/fi";
 import BuilderSidebar from "./BuilderSidebar";
 import ResumePreviewPanel from "./ResumePreviewPanel";
+import { generatePDF } from "../../lib/pdf-utils";
+import useResumeStore from "../../store/useResumeStore";
 
 /* ── Top bar ─────────────────────────────────────────────────────────────── */
 
-function BuilderTopBar() {
-  const handlePrint = () => {
-    window.print();
+function BuilderTopBar({ activeTab, setActiveTab }) {
+  const resume = useResumeStore((state) => state.resume);
+
+  const handleDownload = async () => {
+    const fileName = `${resume.personal.fullName || "resume"}.pdf`;
+    await generatePDF("a4-resume-preview", fileName);
   };
 
   return (
@@ -43,26 +49,41 @@ function BuilderTopBar() {
             <FiFileText className="text-[#adc6ff] text-xs" />
           </div>
           <span className="text-sm font-semibold text-white">Resume Builder</span>
-          <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full bg-[#adc6ff]/10 text-[#adc6ff] text-[10px] font-bold tracking-wider uppercase border border-[#adc6ff]/20">
-            Beta
-          </span>
         </div>
       </div>
 
-      {/* Right: future action slots */}
-      <div className="flex items-center gap-2">
+      {/* Middle: Mobile Tabs */}
+      <div className="flex lg:hidden bg-white/5 rounded-lg p-1 border border-white/10">
         <button
-          id="btn-topbar-save"
-          className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 text-zinc-400 text-xs hover:text-white hover:border-white/20 transition-all cursor-pointer"
+          onClick={() => setActiveTab("edit")}
+          className={`flex items-center gap-2 px-3 py-1 rounded-md text-[11px] font-bold transition-all ${
+            activeTab === "edit" ? "bg-[#adc6ff] text-[#0a0a14]" : "text-zinc-400"
+          }`}
         >
-          Save Draft
+          <FiEdit3 />
+          EDIT
         </button>
         <button
+          onClick={() => setActiveTab("preview")}
+          className={`flex items-center gap-2 px-3 py-1 rounded-md text-[11px] font-bold transition-all ${
+            activeTab === "preview" ? "bg-[#adc6ff] text-[#0a0a14]" : "text-zinc-400"
+          }`}
+        >
+          <FiEye />
+          PREVIEW
+        </button>
+      </div>
+
+      {/* Right: Export */}
+      <div className="flex items-center gap-2">
+        <button
           id="btn-topbar-export"
-          onClick={handlePrint}
+          onClick={handleDownload}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-[#adc6ff] to-[#c9b1ff] text-[#0a0a14] text-xs font-semibold hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer"
         >
-          Export PDF
+          <FiFileText className="sm:hidden" />
+          <span className="hidden sm:inline">Export PDF</span>
+          <span className="sm:hidden text-[10px]">PDF</span>
         </button>
       </div>
     </header>
@@ -72,24 +93,25 @@ function BuilderTopBar() {
 /* ── Page shell ──────────────────────────────────────────────────────────── */
 
 export default function ResumeBuilderPage() {
+  const [activeTab, setActiveTab] = useState("edit");
+
   return (
     <div
       id="resume-builder-root"
       className="flex flex-col h-screen bg-[#0f0f13] overflow-hidden"
     >
-      <BuilderTopBar />
+      <BuilderTopBar activeTab={activeTab} setActiveTab={setActiveTab} />
 
-      {/*
-       * Two-column layout:
-       *   mobile  → stacked (sidebar on top, preview below)
-       *   desktop → sidebar (420 px fixed) | preview (fills remaining space)
-       */}
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-[420px_1fr] overflow-hidden">
-        {/* Left: scrollable editor */}
-        <BuilderSidebar />
+        {/* Editor Sidebar */}
+        <div className={`h-full overflow-hidden ${activeTab === "edit" ? "block" : "hidden lg:block"}`}>
+          <BuilderSidebar />
+        </div>
 
-        {/* Right: sticky live preview */}
-        <ResumePreviewPanel />
+        {/* Preview Panel */}
+        <div className={`h-full overflow-hidden ${activeTab === "preview" ? "block" : "hidden lg:block"}`}>
+          <ResumePreviewPanel />
+        </div>
       </div>
     </div>
   );

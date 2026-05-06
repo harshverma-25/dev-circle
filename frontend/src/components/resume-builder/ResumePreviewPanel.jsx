@@ -1,6 +1,7 @@
 "use client";
 
 import { FiDownload, FiEye, FiMail, FiPhone, FiMapPin, FiLinkedin, FiGithub, FiGlobe } from "react-icons/fi";
+import { generatePDF } from "../../lib/pdf-utils";
 import useResumeStore from "../../store/useResumeStore";
 
 /* ── Content Components ─────────────────────────────────────────────────── */
@@ -249,8 +250,11 @@ function A4ResumePreview() {
 /* ── Panel ───────────────────────────────────────────────────────────────── */
 
 export default function ResumePreviewPanel() {
-  const handlePrint = () => {
-    window.print();
+  const resume = useResumeStore((state) => state.resume);
+
+  const handleDownload = async () => {
+    const fileName = `${resume.personal.fullName || "resume"}.pdf`;
+    await generatePDF("a4-resume-preview", fileName);
   };
 
   return (
@@ -277,11 +281,11 @@ export default function ResumePreviewPanel() {
 
         <button
           id="btn-preview-download"
-          onClick={handlePrint}
+          onClick={handleDownload}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 text-zinc-400 text-xs hover:text-white hover:border-white/20 transition-all cursor-pointer"
         >
           <FiDownload className="text-xs" />
-          Print / PDF
+          Download PDF
         </button>
       </div>
 

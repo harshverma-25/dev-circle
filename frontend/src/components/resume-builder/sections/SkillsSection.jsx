@@ -5,16 +5,22 @@ import { FiCode, FiX } from "react-icons/fi";
 import useResumeStore from "../../../store/useResumeStore";
 import SectionWrapper from "./ui/SectionWrapper";
 
-function SkillInput({ label, categoryId, skills, setSkillCategory }) {
+function SkillInput({ label, categoryId, skills = [], setSkillCategory }) {
   const [inputValue, setInputValue] = useState("");
 
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter" && inputValue.trim()) {
-      e.preventDefault();
+  const handleAdd = () => {
+    if (inputValue.trim()) {
       if (!skills.includes(inputValue.trim())) {
         setSkillCategory(categoryId, [...skills, inputValue.trim()]);
       }
       setInputValue("");
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleAdd();
     }
   };
 
@@ -27,7 +33,9 @@ function SkillInput({ label, categoryId, skills, setSkillCategory }) {
 
   return (
     <div className="space-y-2">
-      <label className="block text-xs font-medium text-zinc-400">{label}</label>
+      <div className="flex items-center justify-between">
+        <label className="block text-xs font-medium text-zinc-400">{label}</label>
+      </div>
       <div className="flex flex-wrap gap-2 p-2 min-h-[44px] rounded-lg bg-white/[0.05] border border-white/[0.08] focus-within:border-[#adc6ff]/60 focus-within:bg-white/[0.08] transition-all">
         {skills.map((skill) => (
           <span
@@ -38,20 +46,31 @@ function SkillInput({ label, categoryId, skills, setSkillCategory }) {
             <button
               type="button"
               onClick={() => removeSkill(skill)}
-              className="text-zinc-400 hover:text-white transition-colors"
+              className="text-zinc-400 hover:text-white transition-colors cursor-pointer"
             >
               <FiX className="text-[10px]" />
             </button>
           </span>
         ))}
-        <input
-          type="text"
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder={skills.length === 0 ? "Type and press Enter..." : "..."}
-          className="flex-1 min-w-[120px] bg-transparent text-sm text-white placeholder-zinc-600 focus:outline-none"
-        />
+        <div className="flex-1 flex min-w-[120px] items-center">
+          <input
+            type="text"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder={skills.length === 0 ? "Type and press Enter..." : "Add one..."}
+            className="flex-1 bg-transparent text-sm text-white placeholder-zinc-600 focus:outline-none"
+          />
+          {inputValue.trim() && (
+            <button
+              type="button"
+              onClick={handleAdd}
+              className="ml-2 px-2 py-1 rounded bg-[#adc6ff]/20 text-[#adc6ff] text-[10px] font-bold uppercase hover:bg-[#adc6ff]/30 transition-all cursor-pointer"
+            >
+              Add
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

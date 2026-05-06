@@ -2,7 +2,7 @@
 
 import { FiPlus, FiTrash2 } from "react-icons/fi";
 
-export default function BulletList({ label = "Bullet Points", bullets, onChange }) {
+export default function BulletList({ label = "Bullet Points", bullets = [], onChange }) {
   const add = () => onChange([...bullets, ""]);
   const update = (i, val) => {
     const next = [...bullets];

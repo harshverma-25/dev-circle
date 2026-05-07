@@ -33,10 +33,10 @@ function BuilderTopBar({ activeTab, setActiveTab }) {
       {/* Left: back + brand */}
       <div className="flex items-center gap-3">
         <Link
-          href="/resume"
+          href="/"
           id="builder-back-link"
-          aria-label="Back to Resume page"
-          className="flex items-center gap-1.5 text-zinc-400 hover:text-white text-sm transition-colors"
+          aria-label="Back to home page"
+          className="flex items-center gap-1.5 p-2 -ml-2 text-zinc-400 hover:text-white text-sm transition-colors rounded-lg hover:bg-white/5"
         >
           <FiArrowLeft className="text-base" />
           <span className="hidden sm:inline">Back</span>

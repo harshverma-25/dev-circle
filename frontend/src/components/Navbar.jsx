@@ -48,7 +48,15 @@ export default function Navbar() {
   const navLinks = [
     { href: "/", label: "Home", icon: FiHome },
     { href: "/interview", label: "Interviews", icon: FiVideo },
-    { href: "/resume", label: "Resume", icon: FiFileText },
+    { 
+      href: "/resume", 
+      label: "Resume", 
+      icon: FiFileText,
+      dropdown: [
+        { href: "/resume", label: "Resume Builder", desc: "Create and edit your resume" },
+        { href: "/atsscore", label: "AI ATS Score", desc: "Analyze your resume performance" }
+      ]
+    },
   ];
 
   return (
@@ -84,24 +92,50 @@ export default function Navbar() {
             <div className="hidden md:flex items-center gap-1 ml-8">
               {navLinks.map((link) => {
                 const isActive = pathname === link.href || (link.href !== "/" && pathname?.startsWith(link.href));
+                const Tag = link.dropdown ? 'div' : Link;
                 return (
-                  <Link
+                  <Tag
                     key={link.href}
-                    href={link.href}
+                    href={link.dropdown ? undefined : link.href}
                     className={`relative px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 group ${
                       isActive
                         ? "bg-gradient-to-r from-[#adc6ff]/15 to-purple-500/15 text-[#adc6ff]"
                         : "text-zinc-400 hover:text-white hover:bg-white/5"
                     }`}
                   >
-                    <div className="flex items-center gap-2">
-                      <link.icon size={16} />
-                      <span>{link.label}</span>
-                    </div>
-                    {isActive && (
+                    {link.dropdown ? (
+                      <div className="relative group/dropdown">
+                        <div className="flex items-center gap-2 cursor-pointer">
+                          <link.icon size={16} />
+                          <span>{link.label}</span>
+                          <FiChevronDown size={14} className="group-hover/dropdown:rotate-180 transition-transform" />
+                        </div>
+                        
+                        <div className="absolute top-full -left-4 pt-4 opacity-0 group-hover/dropdown:opacity-100 invisible group-hover/dropdown:visible transition-all duration-300">
+                          <div className="w-56 bg-[#121212] border border-white/10 rounded-xl shadow-2xl overflow-hidden">
+                            {link.dropdown.map(item => (
+                              <Link 
+                                key={item.href} 
+                                href={item.href}
+                                className="flex flex-col px-4 py-3 hover:bg-white/5 transition-colors border-b border-white/5 last:border-0"
+                              >
+                                <span className="text-sm font-medium text-white">{item.label}</span>
+                                <span className="text-xs text-zinc-500 mt-1">{item.desc}</span>
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <link.icon size={16} />
+                        <span>{link.label}</span>
+                      </div>
+                    )}
+                    {isActive && !link.dropdown && (
                       <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-8 h-0.5 bg-gradient-to-r from-[#adc6ff] to-purple-500 rounded-full"></div>
                     )}
-                  </Link>
+                  </Tag>
                 );
               })}
             </div>
@@ -244,6 +278,36 @@ export default function Navbar() {
             {/* Navigation Links */}
             <div className="space-y-2">
               {navLinks.map((link) => {
+                if (link.dropdown) {
+                  return (
+                    <div key={link.href} className="space-y-1">
+                      <div className="flex items-center gap-3 px-4 py-2 text-xs font-semibold text-zinc-500 uppercase tracking-wider">
+                        {link.label}
+                      </div>
+                      {link.dropdown.map((sublink) => {
+                        const isSubActive = pathname === sublink.href;
+                        return (
+                          <Link
+                            key={sublink.href}
+                            href={sublink.href}
+                            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                              isSubActive
+                                ? "bg-gradient-to-r from-[#adc6ff]/10 to-purple-500/10 text-[#adc6ff] border border-[#adc6ff]/20"
+                                : "text-zinc-400 hover:text-white hover:bg-white/5"
+                            }`}
+                          >
+                            <link.icon size={18} />
+                            <div className="flex flex-col">
+                              <span className="font-medium text-sm">{sublink.label}</span>
+                              <span className="text-[10px] text-zinc-500">{sublink.desc}</span>
+                            </div>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  );
+                }
+
                 const isActive = pathname === link.href;
                 return (
                   <Link

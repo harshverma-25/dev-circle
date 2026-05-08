@@ -46,10 +46,13 @@ app.get("/api/test", protect, (req, res) => {
   res.json({ message: "Protected route accessed", user: req.user });
 });
 
+import atsRoutes from "./modules/ats/ats.routes.js";
+
 // ─── Routes ───────────────────────────────────────────────────────────────────
 app.use("/api/auth",      authLimiter, authRoutes);
 app.use("/api/interview", interviewRoutes);
 app.use("/api/upload",    uploadRoutes);
+app.use("/api/ats",       atsRoutes);
 
 // ─── Global Error Handler ─────────────────────────────────────────────────────
 app.use(errorHandler);

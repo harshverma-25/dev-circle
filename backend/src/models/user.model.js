@@ -38,9 +38,19 @@ const userSchema = new mongoose.Schema(
     },
 
     refreshToken: {
-  type: String,
-  default: null
-}
+      type: String,
+      default: null
+    },
+
+    atsUsageCount: {
+      type: Number,
+      default: 0
+    },
+    
+    lastAtsUsageTimestamp: {
+      type: Date,
+      default: null
+    }
   },
   { timestamps: true }
 );

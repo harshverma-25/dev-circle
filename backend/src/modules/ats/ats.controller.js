@@ -21,7 +21,7 @@ export const analyzeResume = async (req, res) => {
     }
 
     // 2. Check Daily Limit
-    const limit = 2;
+    const limit = 5;
     if (isToday(user.lastAtsUsageTimestamp)) {
       if (user.atsUsageCount >= limit) {
         return res.status(429).json({

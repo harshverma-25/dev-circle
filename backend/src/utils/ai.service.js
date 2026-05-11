@@ -21,8 +21,7 @@ const getOpenAIClient = () => {
 };
 
 const FREE_MODELS = [
-  "meta-llama/llama-3.3-70b-instruct:free",      // Llama 3.3 70B - most capable
-  "nousresearch/hermes-3-llama-3.1-405b:free",   // Hermes 3 405B - very capable
+
   "openai/gpt-oss-120b:free",                    // GPT OSS 120B
   "nvidia/nemotron-3-super-120b-a12b:free",      // Nvidia 120B
   "qwen/qwen3-next-80b-a3b-instruct:free",       // Qwen 80B

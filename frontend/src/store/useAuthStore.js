@@ -13,6 +13,8 @@ const useAuthStore = create(
       setAccessToken: (accessToken) => set({ accessToken }),
 
       logout: () => set({ user: null, accessToken: null }),
+      
+      setHasHydrated: (state) => set({ hasHydrated: state }),
     }),
     {
       name: "auth-storage",
@@ -23,8 +25,10 @@ const useAuthStore = create(
       }),
 
       // ⭐ THIS FIXES YOUR BUG
-      onRehydrateStorage: () => (state) => {
-        state.hasHydrated = true;
+      onRehydrateStorage: () => (state, error) => {
+        if (!error && state) {
+          state.setHasHydrated(true);
+        }
       },
     }
   )

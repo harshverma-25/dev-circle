@@ -265,6 +265,22 @@ export default function AtsScorePage() {
                 </div>
               </div>
             )}
+            {/* Interview Questions */}
+            {result.interviewQuestions && result.interviewQuestions.length > 0 && (
+              <div className="bg-[#121212] rounded-2xl border border-white/10 p-6 shadow-xl mt-6">
+                <h3 className="font-bold text-xl text-white mb-6">AI Generated Interview Questions</h3>
+                <div className="space-y-4">
+                  {result.interviewQuestions.map((item, idx) => (
+                    <div key={idx} className="border border-white/5 bg-white/[0.02] rounded-xl p-5">
+                      <h4 className="font-bold text-[#adc6ff] mb-2 font-mono">Q: {item.question}</h4>
+                      <p className="text-zinc-500 text-sm italic">
+                        <span className="text-zinc-400 font-semibold">Context:</span> {item.reason}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             
           </div>
         )}

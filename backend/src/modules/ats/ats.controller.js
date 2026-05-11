@@ -43,7 +43,7 @@ export const analyzeResume = async (req, res) => {
         return res.status(400).json({ success: false, message: "Could not extract text from the PDF. Ensure it's not an image-based PDF."});
     }
 
-    // 5. Analyze with Gemini
+    // 5. Analyze with AI (OpenRouter)
     const analysis = await analyzeResumeContent(text);
 
     // 6. Update user usage stats

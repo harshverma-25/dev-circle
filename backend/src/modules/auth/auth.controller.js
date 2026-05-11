@@ -15,10 +15,10 @@ export const googleAuth = async (req, res, next) => {
     res
       .cookie("refreshToken", result.refreshToken, {
         httpOnly: true,
-        secure: true,
-        sameSite: "none",
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
         path: "/",
-        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        maxAge: 365 * 24 * 60 * 60 * 1000 // 365 days
       })
       .status(200)
       .json({
@@ -43,10 +43,10 @@ export const register = async (req, res, next) => {
     res
       .cookie("refreshToken", result.refreshToken, {
         httpOnly: true,
-        secure: true,
-        sameSite: "none",
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
         path: "/",
-        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        maxAge: 365 * 24 * 60 * 60 * 1000 // 365 days
       })
       .status(201)
       .json({
@@ -71,10 +71,10 @@ export const login = async (req, res, next) => {
     res
       .cookie("refreshToken", result.refreshToken, {
         httpOnly: true,
-        secure: true,
-        sameSite: "none",
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
         path: "/",
-        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        maxAge: 365 * 24 * 60 * 60 * 1000 // 365 days
       })
       .status(200)
       .json({
@@ -110,21 +110,28 @@ export const logout = async (req, res, next) => {
   try {
     const token = req.cookies.refreshToken;
 
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      path: "/",
+    });
+
     if (!token) {
       return res.status(200).json({ message: "Already logged out" });
     }
 
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_REFRESH_SECRET
-    );
+    try {
+      const decoded = jwt.verify(
+        token,
+        process.env.JWT_REFRESH_SECRET
+      );
+      await logoutUser(decoded.userId);
+    } catch (e) {
+      // Ignore verification error on logout
+    }
 
-    await logoutUser(decoded.userId);
-
-    res
-      .clearCookie("refreshToken")
-      .status(200)
-      .json({ message: "Logged out successfully" });
+    res.status(200).json({ message: "Logged out successfully" });
   } catch (error) {
     next(error);
   }

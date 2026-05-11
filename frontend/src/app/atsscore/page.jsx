@@ -275,7 +275,7 @@ export default function AtsScorePage() {
             </button>
 
             <p className="text-center text-xs text-zinc-600 mt-4">
-              Limit: 2 analysis per day
+              Limit: 5 analysis per day
             </p>
           </div>
         )}

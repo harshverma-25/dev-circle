@@ -61,7 +61,7 @@ export default function AuthPage() {
     <div className="min-h-screen bg-[#131313] flex items-center justify-center px-6 relative font-['Inter']">
       
       {/* Background Decor - Matching your Stitch Design aesthetic */}
-      <div className="absolute inset-0 z-0">
+      <div className="absolute inset-0 z-0 pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-[#adc6ff]/5 blur-[120px] rounded-full"></div>
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-[#adc6ff]/5 blur-[120px] rounded-full"></div>
       </div>
@@ -92,7 +92,7 @@ export default function AuthPage() {
 
           {isLogin && (
             <div className="mb-6 space-y-6">
-              <div className="flex justify-center">
+              <div className="flex justify-center relative z-50">
                 <GoogleLogin
                   onSuccess={handleGoogleSuccess}
                   onError={() => {
@@ -107,7 +107,7 @@ export default function AuthPage() {
                 />
               </div>
 
-              <div className="relative">
+              <div className="relative z-0 pointer-events-none">
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-white/10"></div>
                 </div>

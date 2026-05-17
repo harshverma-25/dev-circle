@@ -58,7 +58,7 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#131313] flex items-center justify-center px-6 relative overflow-hidden font-['Inter']">
+    <div className="min-h-screen bg-[#131313] flex items-center justify-center px-6 relative font-['Inter']">
       
       {/* Background Decor - Matching your Stitch Design aesthetic */}
       <div className="absolute inset-0 z-0">

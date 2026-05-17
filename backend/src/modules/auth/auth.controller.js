@@ -15,8 +15,8 @@ export const googleAuth = async (req, res, next) => {
     res
       .cookie("refreshToken", result.refreshToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        secure: true,
+        sameSite: "none",
         path: "/",
         maxAge: 365 * 24 * 60 * 60 * 1000 // 365 days
       })
@@ -43,8 +43,8 @@ export const register = async (req, res, next) => {
     res
       .cookie("refreshToken", result.refreshToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        secure: true,
+        sameSite: "none",
         path: "/",
         maxAge: 365 * 24 * 60 * 60 * 1000 // 365 days
       })
@@ -71,8 +71,8 @@ export const login = async (req, res, next) => {
     res
       .cookie("refreshToken", result.refreshToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        secure: true,
+        sameSite: "none",
         path: "/",
         maxAge: 365 * 24 * 60 * 60 * 1000 // 365 days
       })
@@ -112,8 +112,8 @@ export const logout = async (req, res, next) => {
 
     res.clearCookie("refreshToken", {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      secure: true,
+      sameSite: "none",
       path: "/",
     });
 

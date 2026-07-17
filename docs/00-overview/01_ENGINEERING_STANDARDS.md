@@ -1,288 +1,165 @@
-# DevCircle – Engineering Standards
+# 01_ENGINEERING_STANDARDS.md
 
-**Version:** 1.0 (Draft)
-**Status:** Draft
+# DevCircle - Engineering Standards
+
+**Version:** 1.0  
+**Status:** Approved  
 **Owner:** Harsh Verma
-**Last Updated:** July 2026
 
 ---
 
 # 1. Purpose
 
-This document defines the engineering standards and technical conventions used throughout the DevCircle project.
+This document defines the engineering standards for DevCircle.
 
-Its purpose is to ensure that every module follows the same architecture, coding style, API design, naming conventions, security practices, and development workflow.
-
-All contributors and future implementations must follow this document.
+Every contributor must follow these standards to ensure consistency, maintainability, and scalability across the project.
 
 ---
 
-# 2. Tech Stack
+# 2. Engineering Principles
 
-## Frontend
+The project follows these principles:
 
-* Next.js (App Router)
-* TypeScript
-* Tailwind CSS
-* shadcn/ui
-* TanStack Query
-* React Hook Form
-* Zod
+- Keep code simple and readable.
+- Follow Single Responsibility Principle (SRP).
+- Prefer composition over duplication.
+- Separate business logic from infrastructure.
+- Keep controllers thin.
+- Build reusable components and utilities.
+- Fail fast and handle errors consistently.
+- Write self-explanatory code.
+- Maintain consistent project structure.
 
 ---
+
+# 3. Project Structure
 
 ## Backend
 
-* Node.js
-* Express.js
-* TypeScript
-
----
-
-## Database
-
-* MongoDB
-* Mongoose
-
----
-
-## Authentication
-
-* JWT Access Token
-* Refresh Token
-* Google OAuth
-* Email OTP Verification
-
----
-
-## File Storage
-
-* Cloudinary
-
----
-
-## AI
-
-* OpenRouter
-
----
-
-## Email
-
-* Resend
-
----
-
-## Deployment
-
-Frontend
-
-* Vercel
-
-Backend
-
-* Railway or Render
-
-Database
-
-* MongoDB Atlas
-
----
-
-# 3. Project Architecture
-
-The backend follows a **Feature-Based Architecture**.
-
-Each feature is isolated into its own module.
-
-Example:
-
-```text
+```
 src/
-│
-├── modules/
-│   ├── auth/
-│   ├── users/
-│   ├── companies/
-│   ├── jobs/
-│   ├── applications/
-│   ├── interviews/
-│   └── notifications/
-│
-├── shared/
-│   ├── config/
-│   ├── middleware/
-│   ├── utils/
-│   ├── constants/
-│   └── types/
+
+modules/
+shared/
+
+app.ts
+server.ts
 ```
 
-Each module contains:
+Each module follows:
 
-* Routes
-* Controllers
-* Services
-* Repositories
-* Models
-* Validation
-* Types
+```
+module/
+
+routes/
+controllers/
+services/
+repositories/
+models/
+validators/
+types/
+```
+
+## Frontend
+
+```
+src/
+
+app/
+components/
+hooks/
+services/
+providers/
+lib/
+types/
+utils/
+```
 
 ---
 
 # 4. Naming Conventions
 
-## Variables
-
-Use **camelCase**.
-
-Example:
-
-```text
-firstName
-
-createdAt
-
-refreshToken
-```
-
----
-
-## Functions
-
-Use camelCase.
-
-Functions should clearly describe their purpose.
-
-Example:
-
-```text
-createUser()
-
-updateCompany()
-
-verifyOtp()
-```
-
----
-
 ## Files
 
-Use feature-based file names.
-
-Example:
-
-```text
-auth.controller.ts
-
-auth.service.ts
-
-auth.repository.ts
-
-auth.validation.ts
-
-auth.routes.ts
-
-auth.model.ts
 ```
+user.controller.ts
+user.service.ts
+user.repository.ts
+user.model.ts
+auth.middleware.ts
+```
+
+Use:
+
+- kebab-case for file names
+- PascalCase for React components
+- camelCase for variables and functions
+- UPPER_SNAKE_CASE for constants
 
 ---
 
-## Collections
+# 5. Backend Layer Responsibilities
 
-Collection names are plural.
+Every layer has a single responsibility.
 
-Example:
+## Route
 
-```text
-users
+- Define endpoints.
+- Apply middleware.
+- Forward requests to controllers.
 
-companies
-
-jobs
-
-applications
-
-interviews
-
-email_verifications
-```
+Must NOT contain business logic.
 
 ---
 
-## Routes
+## Controller
 
-Use plural resource names.
+Responsible for:
 
-Example:
+- Reading request data.
+- Calling services.
+- Returning HTTP responses.
 
-```text
-POST /auth/register
-
-GET /jobs
-
-PATCH /companies/:companyId
-
-DELETE /jobs/:jobId
-```
-
-Avoid verb-based routes such as:
-
-```text
-/createJob
-
-/updateProfile
-```
+Controllers must not access the database directly.
 
 ---
 
-# 5. API Standards
+## Service
 
-All APIs must follow REST principles.
+Responsible for:
 
-Rules:
+- Business logic.
+- Feature workflows.
+- Authorization decisions.
+- Calling repositories.
 
-* Use nouns instead of verbs.
-* Keep URLs lowercase.
-* Use plural resource names.
-* Use path parameters for resources.
-* Use query parameters for filtering and pagination.
-
-Example:
-
-```text
-GET /jobs?page=1&limit=10
-
-GET /jobs?location=Remote
-
-GET /jobs?search=node
-```
+Services should not know HTTP details.
 
 ---
 
-# 6. HTTP Status Codes
+## Repository
 
-Use standard HTTP status codes.
+Responsible for:
 
-| Status | Usage                 |
-| ------ | --------------------- |
-| 200    | Successful request    |
-| 201    | Resource created      |
-| 204    | No content            |
-| 400    | Bad request           |
-| 401    | Unauthorized          |
-| 403    | Forbidden             |
-| 404    | Resource not found    |
-| 409    | Conflict              |
-| 422    | Validation error      |
-| 500    | Internal server error |
+- Database operations only.
+
+Repositories must not contain business logic.
 
 ---
 
-# 7. API Response Format
+## Model
 
-Every API should return a consistent response structure.
+Responsible only for schema definitions.
 
-## Success Response
+No business logic.
+
+---
+
+# 6. API Response Format
+
+Every API returns a consistent structure.
+
+## Success
 
 ```json
 {
@@ -292,255 +169,152 @@ Every API should return a consistent response structure.
 }
 ```
 
----
-
-## Error Response
+## Error
 
 ```json
 {
   "success": false,
-  "message": "Validation failed.",
+  "message": "Operation failed.",
   "error": {
-    "code": "VALIDATION_ERROR"
+    "code": "ERROR_CODE"
   }
 }
 ```
 
 ---
 
-# 8. Error Handling
+# 7. Error Handling
 
-* Use a global error handling middleware.
-* Avoid repetitive try-catch blocks where centralized handling is possible.
-* Return meaningful error messages.
-* Never expose internal implementation details.
-* Log unexpected server errors.
+All errors must pass through the global error handler.
 
----
+Do not send raw errors directly from controllers.
 
-# 9. Authentication Standards
+Use custom error classes such as:
 
-Authentication uses:
+- ValidationError
+- AuthenticationError
+- AuthorizationError
+- NotFoundError
+- ConflictError
+- InternalServerError
 
-* JWT Access Token
-* Refresh Token
-
-Supported authentication methods:
-
-* Email + Password
-* Google OAuth
-
-Email verification uses:
-
-* Six-digit OTP
-* Hashed OTP
-* 10-minute expiration
-
-Passwords must be hashed using bcrypt.
+Unexpected errors should return a generic message while detailed information is logged internally.
 
 ---
 
-# 10. Authorization Standards
+# 8. Validation
 
-Role-Based Access Control (RBAC) is used.
+All incoming data must be validated before reaching business logic.
 
-Roles:
+Validation rules:
 
-* Student
-* Recruiter
+- Validate request body.
+- Validate query parameters.
+- Validate route parameters.
+- Reject invalid input immediately.
 
-Every protected request follows:
-
-1. Authenticate user
-2. Verify role
-3. Verify ownership (when required)
-4. Execute business logic
+Use Zod for validation.
 
 ---
 
-# 11. Validation Standards
+# 9. Authentication & Authorization
 
-Request validation is performed using Zod.
+Authentication verifies user identity.
 
-Database validation is handled by Mongoose.
+Authorization determines whether the user has permission to perform an action.
 
-Frontend validation improves user experience but is never trusted.
+Protected routes must:
 
-Every request entering the backend must be validated.
-
----
-
-# 12. Database Standards
-
-* MongoDB ObjectId is used as the primary identifier.
-* UTC is used for all timestamps.
-* Mongoose timestamps are enabled for every collection.
-* References use ObjectId.
-* Only URLs are stored for uploaded files.
-* Do not store binary files inside MongoDB.
+1. Verify access token.
+2. Load authenticated user.
+3. Check required role or ownership.
+4. Execute business logic.
 
 ---
 
-# 13. File Upload Standards
+# 10. Logging
 
-Supported uploads:
+Log important application events, including:
 
-* Avatar
-* Company Logo
-* Resume
+- Server startup
+- Authentication events
+- Database failures
+- External API failures
+- Unexpected exceptions
 
-Storage:
+Never log:
 
-* Cloudinary
-
-Only the Cloudinary URL and related metadata are stored in the database.
-
----
-
-# 14. Logging Standards
-
-Log:
-
-* Server errors
-* Authentication failures
-* Important system events
-
-Do not log:
-
-* Passwords
-* JWTs
-* Refresh Tokens
-* OTPs
-* Sensitive user information
+- Passwords
+- JWT tokens
+- Refresh tokens
+- API keys
+- Sensitive personal data
 
 ---
 
-# 15. Security Standards
+# 11. Environment Variables
 
-* Hash passwords with bcrypt.
-* Validate all incoming requests.
-* Protect private routes.
-* Never expose secrets in responses.
-* Store secrets in environment variables.
-* Verify resource ownership before allowing updates or deletion.
-
----
-
-# 16. Environment Variables
-
-Sensitive values must be stored in environment variables.
+Sensitive configuration must be stored in environment variables.
 
 Examples:
 
-* MongoDB URI
-* JWT Secret
-* Refresh Token Secret
-* Google OAuth Credentials
-* Cloudinary Credentials
-* Resend API Key
-* OpenRouter API Key
+```
+PORT
+MONGODB_URI
+JWT_SECRET
+JWT_REFRESH_SECRET
+OPENROUTER_API_KEY
+CLOUDINARY_URL
+```
 
 Never hardcode secrets.
 
 ---
 
-# 17. Git Standards
+# 12. Git Standards
 
-Use meaningful commit messages.
+Commit messages should be meaningful.
 
 Examples:
 
-```text
-feat(auth): implement authentication module
+```
+feat(auth): implement user registration
 
-feat(jobs): add job creation
+fix(job): validate salary range
 
-fix(auth): resolve refresh token bug
+refactor(user): move business logic to service
 
-docs: update authentication architecture
+docs(api): update authentication endpoints
 ```
 
-Keep commits focused on a single change.
+---
+
+# 13. Documentation Standards
+
+Every new feature must include:
+
+- SPEC.md
+- API.md
+
+If implementation changes architecture or behavior, update the documentation before merging changes.
 
 ---
 
-# 18. Code Style
+# 14. References
 
-* Prefer small, reusable functions.
-* Keep controllers thin.
-* Place business logic in services.
-* Use repositories for database access.
-* Avoid duplicated code.
-* Use descriptive names.
-* Write self-explanatory code.
+This document defines engineering practices only.
 
----
+Related documents:
 
-# 19. Documentation Standards
-
-Documentation is written before implementation.
-
-Every module document should include:
-
-* Purpose
-* Scope
-* Actors
-* Workflow
-* Database Design
-* APIs
-* Business Rules
-* Validation
-* Security
-* Edge Cases
-* Future Enhancements
+- 00_PROJECT_CONTEXT.md
+- 02_DATABASE_ARCHITECTURE.md
+- 03_BACKEND_ARCHITECTURE.md
+- 04_FRONTEND_ARCHITECTURE.md
 
 ---
 
-# 20. Development Workflow
+# Document Status
 
-Every feature follows the same lifecycle.
+**Status:** Approved
 
-```text
-Requirement
-      ↓
-Architecture
-      ↓
-Documentation
-      ↓
-Review
-      ↓
-Approval
-      ↓
-Implementation
-      ↓
-Testing
-      ↓
-Completion
-```
-
-No implementation should begin before the corresponding document is approved.
-
----
-
-# 21. Review Checklist
-
-Before approving a module, verify:
-
-* Architecture follows project standards.
-* Naming conventions are correct.
-* APIs follow REST principles.
-* Validation is defined.
-* Security requirements are addressed.
-* Business rules are complete.
-* Edge cases are documented.
-* Documentation is complete.
-
----
-
-# 22. Document Status
-
-**Status:** Draft
-
-**Next Step:** 02_DATABASE_ARCHITECTURE.md
-
-**Implementation:** Not Started
+**Next Document:** 02_DATABASE_ARCHITECTURE.md

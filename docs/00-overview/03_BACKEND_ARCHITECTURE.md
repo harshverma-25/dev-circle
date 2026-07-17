@@ -1,590 +1,359 @@
-# DevCircle – Backend Architecture
+# 03_BACKEND_ARCHITECTURE.md
 
-**Version:** 1.0 (Draft)
-**Status:** Draft
+# DevCircle - Backend Architecture
+
+**Version:** 1.0  
+**Status:** Approved  
 **Owner:** Harsh Verma
-**Last Updated:** July 2026
 
 ---
 
 # 1. Purpose
 
-This document defines the backend architecture for DevCircle.
+This document defines the backend architecture of DevCircle.
 
-It establishes the application's structural design, request lifecycle, layer responsibilities, dependency rules, error handling strategy, logging standards, and development principles.
+It describes how requests flow through the application, the responsibility of each layer, and the architectural rules followed throughout the backend.
 
-Every backend module must follow this architecture.
-
----
-
-# 2. Engineering Principles
-
-The backend follows these engineering principles:
-
-1. Simplicity over cleverness.
-2. Readability over short code.
-3. Consistency over personal preference.
-4. Security by default.
-5. Fail fast with meaningful errors.
-6. Every layer has one responsibility.
-7. Business logic should remain independent of framework-specific details.
-8. Documentation is part of the product.
-9. Optimize only after measuring.
-10. Every major architectural decision must have a documented reason.
+This document does not define database schemas or engineering conventions. Refer to the corresponding documents for those topics.
 
 ---
 
-# 3. Technology Stack
+# 2. Architecture Style
 
-Backend Runtime
+The backend follows a Feature-Based Modular Architecture with the Repository Pattern.
 
-* Node.js
+Every feature is self-contained and follows the same structure.
 
-Framework
-
-* Express.js
-
-Language
-
-* TypeScript
-
-Database
-
-* MongoDB
-
-ODM
-
-* Mongoose
-
-Authentication
-
-* JWT
-* Google OAuth
-
-Validation
-
-* Zod
-
-Cloud Storage
-
-* Cloudinary
-
-Email
-
-* Resend
-
-Logging
-
-* Winston (or equivalent structured logger)
-
----
-
-# 4. Backend Architecture Overview
-
-The backend follows a Feature-Based Architecture combined with layered responsibilities.
-
-```text
-Client
-   │
-   ▼
-Routes
-   │
-   ▼
+```
+Route
+    ↓
 Middleware
-(Authentication / Authorization / Request ID / Logging)
-   │
-   ▼
+    ↓
 Validation
-   │
-   ▼
+    ↓
 Controller
-   │
-   ▼
+    ↓
 Service
-   │
-   ▼
+    ↓
 Repository
-   │
-   ▼
-Model (Mongoose)
-   │
-   ▼
+    ↓
+Model
+    ↓
 MongoDB
 ```
 
-Each layer performs one well-defined responsibility.
-
 ---
 
-# 5. Project Structure
+# 3. Folder Structure
 
-```text
+```
 src/
-│
-├── modules/
-│   ├── auth/
-│   ├── users/
-│   ├── companies/
-│   ├── jobs/
-│   ├── applications/
-│   ├── interviews/
-│   ├── notifications/
-│   └── ai/
-│
-├── shared/
-│   ├── config/
-│   ├── middleware/
-│   ├── errors/
-│   ├── logger/
-│   ├── responses/
-│   ├── constants/
-│   ├── types/
-│   ├── utils/
-│   └── validation/
-│
-├── app.ts
-└── server.ts
+
+modules/
+shared/
+
+app.ts
+server.ts
+```
+
+Each module follows:
+
+```
+authentication/
+
+controllers/
+routes/
+services/
+repositories/
+models/
+validators/
+types/
+```
+
+Shared resources are placed inside:
+
+```
+shared/
+
+config/
+middleware/
+errors/
+responses/
+utils/
+logger/
+constants/
 ```
 
 ---
 
-# 6. Layer Responsibilities
+# 4. Request Lifecycle
+
+Every request follows the same lifecycle.
+
+```
+Client
+    │
+    ▼
+Express Route
+    │
+    ▼
+Middleware
+    │
+    ▼
+Validation
+    │
+    ▼
+Controller
+    │
+    ▼
+Service
+    │
+    ▼
+Repository
+    │
+    ▼
+MongoDB
+    │
+    ▼
+Repository
+    │
+    ▼
+Service
+    │
+    ▼
+Controller
+    │
+    ▼
+Response
+```
+
+---
+
+# 5. Layer Responsibilities
 
 ## Route
 
-Responsible for:
+Responsibilities:
 
-* Defining API endpoints
-* Applying middleware
-* Forwarding requests to controllers
+- Register endpoints
+- Apply middleware
+- Forward requests
 
-Routes must never contain business logic.
+Must NOT:
+
+- Contain business logic
+- Access database
 
 ---
 
 ## Middleware
 
-Responsible for:
+Responsibilities:
 
-* Authentication
-* Authorization
-* Request ID generation
-* Logging
-* Rate limiting
-* Security headers
-* Request preprocessing
+- Authentication
+- Authorization
+- Request logging
+- Security
+- Request preprocessing
+
+Must NOT:
+
+- Execute business logic
 
 ---
 
 ## Validation
 
-Responsible for validating incoming request data using Zod.
+Responsibilities:
 
-Validation occurs before controllers are executed.
+- Validate request body
+- Validate params
+- Validate query
 
-Invalid requests never reach the business layer.
+Invalid requests stop here.
 
 ---
 
 ## Controller
 
-Responsible for:
+Responsibilities:
 
-* Receiving HTTP requests
-* Calling services
-* Returning successful responses
+- Receive validated request
+- Call service
+- Return HTTP response
 
-Controllers should remain thin.
+Must NOT:
 
-Controllers must not contain business logic.
+- Access database
+- Implement business logic
 
 ---
 
 ## Service
 
-Responsible for:
+Responsibilities:
 
-* Business rules
-* Workflow orchestration
-* Permission checks
-* Cross-module coordination
+- Business logic
+- Workflow orchestration
+- Authorization decisions
+- Call repositories
 
-Services never interact directly with Express request or response objects.
+Must NOT:
+
+- Handle HTTP requests
+- Perform database queries directly
 
 ---
 
 ## Repository
 
-Responsible for:
+Responsibilities:
 
-* Database queries
-* CRUD operations
-* Data persistence
+- Read/write database
+- Convert database operations into reusable methods
 
-Repositories must never contain business logic.
+Must NOT:
+
+- Implement business logic
 
 ---
 
 ## Model
 
-Responsible for:
+Responsibilities:
 
-* Schema definitions
-* Database constraints
-* Indexes
-* Timestamps
+- Define schema
+- Define indexes
+- Define relationships
+
+Must NOT:
+
+- Implement business logic
 
 ---
 
-# 7. Dependency Rules
+# 6. Dependency Rules
 
-Allowed dependency flow:
+Allowed:
 
-```text
+```
 Route
-   ↓
+    ↓
 Controller
-   ↓
+    ↓
 Service
-   ↓
+    ↓
 Repository
-   ↓
+    ↓
 Model
 ```
 
-The reverse direction is prohibited.
+Not Allowed:
 
-Examples of prohibited dependencies:
+- Controller → Model
+- Controller → Database
+- Service → Express Response
+- Repository → HTTP
+- Route → Repository
 
-* Controller → Database
-* Controller → Model
-* Route → Repository
-* Repository → Controller
-* Model → Service
-
-This keeps dependencies predictable and maintainable.
+Dependencies should always flow downward.
 
 ---
 
-# 8. Request Lifecycle
+# 7. Module Structure
 
-Every request follows the same processing pipeline.
+Each feature is isolated.
 
-```text
-Incoming Request
-        │
-        ▼
-Request ID Middleware
-        │
-        ▼
-Logger Middleware
-        │
-        ▼
-Authentication
-        │
-        ▼
-Authorization
-        │
-        ▼
-Validation
-        │
-        ▼
-Controller
-        │
-        ▼
-Service
-        │
-        ▼
+Example:
+
+```
+jobs/
+
+controllers/
+repositories/
+routes/
+services/
+validators/
+models/
+types/
+```
+
+Features communicate through services rather than directly accessing each other's repositories.
+
+---
+
+# 8. Security Flow
+
+Protected requests follow this sequence.
+
+```
+Request
+    ↓
+Authenticate User
+    ↓
+Verify JWT
+    ↓
+Load User
+    ↓
+Check Role / Ownership
+    ↓
+Execute Service
+```
+
+Business permissions are enforced in the Service layer.
+
+---
+
+# 9. Error Flow
+
+```
 Repository
-        │
-        ▼
-MongoDB
-        │
-        ▼
+      ↓
+Service
+      ↓
 Controller
-        │
-        ▼
-Response Builder
-        │
-        ▼
+      ↓
+Global Error Handler
+      ↓
 Client
 ```
 
-All endpoints must follow this lifecycle.
+All errors are propagated upward.
+
+Controllers should not contain repetitive try-catch blocks unless additional handling is required.
 
 ---
 
-# 9. Error Handling Architecture
+# 10. Scalability Principles
 
-DevCircle uses centralized error handling.
+The architecture is designed to support future additions such as:
 
-Errors are never returned directly from controllers or services.
+- Redis
+- Background jobs
+- Event-driven processing
+- WebSockets
+- Multiple AI providers
+- Message queues
 
-Instead:
-
-```text
-Repository
-      │
-      ▼
-Service
-      │
-      ▼
-Controller
-      │
-      ▼
-Global Error Handler
-      │
-      ▼
-Standardized API Response
-```
-
-Only the Global Error Handler sends error responses to the client.
+These features should integrate without restructuring existing modules.
 
 ---
 
-## Error Categories
+# 11. References
 
-### Operational Errors
+Related documents:
 
-Expected situations:
+- 00_PROJECT_CONTEXT.md
+- 01_ENGINEERING_STANDARDS.md
+- 02_DATABASE_ARCHITECTURE.md
+- 04_FRONTEND_ARCHITECTURE.md
 
-* Validation failure
-* Duplicate email
-* Invalid credentials
-* Resource not found
-* Unauthorized access
-
-Operational errors return meaningful client responses.
+Module-specific implementation details are defined in each module's `SPEC.md`.
 
 ---
 
-### Programmer Errors
+# Document Status
 
-Unexpected situations:
+**Status:** Approved
 
-* Null reference
-* Logic bugs
-* Unhandled exceptions
-* Invalid assumptions
-
-These errors are logged and return a generic client response.
-
----
-
-## Custom Error Types
-
-The application defines custom errors such as:
-
-* ValidationError
-* AuthenticationError
-* AuthorizationError
-* NotFoundError
-* ConflictError
-* DatabaseError
-* InternalServerError
-
-Each custom error includes:
-
-* HTTP status code
-* Internal error code
-* Client-safe message
-* Operational flag
-
----
-
-# 10. API Response Strategy
-
-Every successful response follows the same structure.
-
-```json
-{
-  "success": true,
-  "message": "Operation completed successfully.",
-  "data": {}
-}
-```
-
-Every error response follows the same structure.
-
-```json
-{
-  "success": false,
-  "message": "Validation failed.",
-  "error": {
-    "code": "VALIDATION_ERROR"
-  }
-}
-```
-
-Consistency across every endpoint is mandatory.
-
----
-
-# 11. Logging Architecture
-
-Logging is centralized.
-
-Every request receives a unique Request ID.
-
-Log Levels:
-
-* INFO
-* WARN
-* ERROR
-* FATAL
-* DEBUG (development only)
-
-Sensitive information must never be logged.
-
-Examples:
-
-* Passwords
-* JWT tokens
-* Refresh tokens
-* OTPs
-* API keys
-
-Logs should include:
-
-* Timestamp
-* Request ID
-* User ID (if authenticated)
-* Endpoint
-* HTTP method
-* Error details (when applicable)
-
----
-
-# 12. Security Flow
-
-Protected endpoints follow this sequence:
-
-```text
-Authenticate User
-        │
-        ▼
-Verify JWT
-        │
-        ▼
-Load User
-        │
-        ▼
-Check Role
-        │
-        ▼
-Check Resource Ownership
-        │
-        ▼
-Execute Business Logic
-```
-
-No business logic executes before authentication and authorization complete successfully.
-
----
-
-# 13. Module Communication
-
-Modules should remain independent.
-
-When one module needs another module's functionality:
-
-* Prefer calling the other module's service.
-* Avoid direct repository access across modules.
-* Avoid sharing database models between unrelated modules.
-
-Loose coupling improves maintainability.
-
----
-
-# 14. Shared Components
-
-The `shared` directory contains reusable infrastructure.
-
-Examples:
-
-* Error classes
-* Logger
-* Response helpers
-* Configuration
-* Constants
-* Utility functions
-* Middleware
-* Validation helpers
-
-Business-specific code must never be placed in `shared`.
-
----
-
-# 15. Configuration Management
-
-Application configuration is centralized.
-
-Configuration includes:
-
-* Environment variables
-* Database connection
-* JWT configuration
-* Cloudinary
-* Email provider
-* AI provider
-
-Configuration must never be duplicated across modules.
-
----
-
-# 16. Development Principles
-
-Backend development follows these rules:
-
-* Keep controllers thin.
-* Keep services focused.
-* Keep repositories database-only.
-* Prefer composition over duplication.
-* Write reusable utilities.
-* Avoid circular dependencies.
-* Follow established naming conventions.
-* Write self-documenting code whenever possible.
-
----
-
-# 17. Future Scalability
-
-The architecture should support future additions without major restructuring.
-
-Examples:
-
-* Redis caching
-* Background jobs
-* Event-driven messaging
-* WebSockets
-* Microservices
-* Multiple AI providers
-* Audit logging
-* Multi-tenant organizations
-
-The architecture should evolve through extension, not redesign.
-
----
-
-# 18. Review Checklist
-
-Before approving backend implementation:
-
-* Layer responsibilities defined
-* Request lifecycle documented
-* Dependency rules verified
-* Error handling standardized
-* Logging strategy finalized
-* Security flow reviewed
-* Shared infrastructure identified
-* Scalability considered
-
----
-
-# 19. Document Status
-
-**Status:** Draft
-
-**Next Step:** 04_FRONTEND_ARCHITECTURE.md
-
-**Implementation:** Not Started
+**Next Document:** 04_FRONTEND_ARCHITECTURE.md

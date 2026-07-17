@@ -1,387 +1,267 @@
-# DevCircle – Database Architecture
+# 02_DATABASE_ARCHITECTURE.md
 
-**Version:** 1.0 (Draft)
-**Status:** Draft
+# DevCircle - Database Architecture
+
+**Version:** 1.0  
+**Status:** Approved  
 **Owner:** Harsh Verma
-**Last Updated:** July 2026
 
 ---
 
 # 1. Purpose
 
-This document defines the database architecture for DevCircle.
+This document defines the database architecture of DevCircle.
 
-It specifies the collections, relationships, data ownership, indexing strategy, and design principles that will be followed throughout the project.
+It describes how application data is organized, how collections relate to each other, and the database design principles followed throughout the project.
 
-This document is the single source of truth for all database-related decisions.
+Implementation details belong to individual module specifications.
 
 ---
 
 # 2. Database Technology
 
-Database: **MongoDB**
+Database
 
-ODM: **Mongoose**
+- MongoDB Atlas
 
-Reason for choosing MongoDB:
+ODM
 
-* Flexible schema
-* Excellent support for document-based applications
-* Easy horizontal scaling
-* Strong TypeScript ecosystem
-* Well suited for rapidly evolving products
+- Mongoose
 
----
+Design Approach
 
-# 3. Design Principles
-
-The database follows these principles:
-
-* Normalize first, denormalize only when necessary.
-* Store relationships using ObjectId references.
-* Avoid duplicate data.
-* Keep documents focused on a single responsibility.
-* Enable timestamps for every collection.
-* Store files outside MongoDB.
-* Design for future scalability.
+- Normalized data where appropriate
+- ObjectId references between collections
+- Cloudinary for file storage
+- UTC timestamps
+- Soft delete for recoverable data when applicable
 
 ---
 
-# 4. Collections
+# 3. Collections
 
-The system contains the following collections:
+The platform consists of the following collections.
 
-| Collection          | Purpose                           |
-| ------------------- | --------------------------------- |
-| users               | Student and recruiter accounts    |
-| companies           | Recruiter-managed companies       |
-| jobs                | Job postings                      |
-| applications        | Student job applications          |
-| interviews          | Interview scheduling and outcomes |
-| resumes             | Resume metadata                   |
-| notifications       | User notifications                |
-| email_verifications | Email OTP verification            |
-| refresh_tokens      | Refresh token storage             |
+| Collection | Purpose |
+|------------|---------|
+| users | Stores student and recruiter accounts |
+| companies | Stores recruiter company information |
+| jobs | Stores job postings |
+| applications | Stores job applications |
+| interviews | Stores interview information |
+| resumes | Stores uploaded resume metadata |
+| notifications | Stores user notifications |
+| refresh_tokens | Stores active refresh tokens |
+| email_verifications | Stores email verification requests |
 
 ---
 
-# 5. Entity Relationship Diagram
+# 4. Entity Relationships
 
-```text
+```
 User
-├── owns ─────────────► Company
-├── uploads ──────────► Resume
-├── receives ─────────► Notification
-├── has ──────────────► RefreshToken
-└── verifies ─────────► EmailVerification
+ │
+ ├──────► Resume (1:1)
+ │
+ ├──────► Application (1:N)
+ │
+ ├──────► Notification (1:N)
+ │
+ ├──────► RefreshToken (1:N)
+ │
+ └──────► EmailVerification (1:N)
 
 Company
-└── posts ────────────► Job
+ │
+ └──────► Job (1:N)
 
 Job
-└── receives ─────────► Application
+ │
+ └──────► Application (1:N)
 
 Application
-└── may create ───────► Interview
+ │
+ └──────► Interview (0:1)
 ```
 
 ---
 
-# 6. Collection Relationships
+# 5. Collection Overview
 
-## User → Company
+## Users
 
-Relationship:
+Stores authentication and profile information.
 
-One-to-Many
+Roles
 
-One recruiter may own multiple companies.
-
-Each company belongs to one recruiter.
+- Student
+- Recruiter
 
 ---
 
-## Company → Job
+## Companies
 
-Relationship:
+Represents recruiter organizations.
 
-One-to-Many
+A recruiter may manage one company.
 
-Each company may publish multiple jobs.
+---
+
+## Jobs
+
+Created by recruiters.
 
 Each job belongs to exactly one company.
 
 ---
 
-## User → Resume
+## Applications
 
-Relationship:
+Represents a student's application to a job.
 
-One-to-One
+Each application references:
 
-Each student has one active resume.
-
-Future versions may support resume versioning.
-
----
-
-## User → Application
-
-Relationship:
-
-One-to-Many
-
-Students may apply to many jobs.
-
-Each application belongs to one student.
+- Student
+- Job
 
 ---
 
-## Job → Application
+## Interviews
 
-Relationship:
+Created after an application progresses.
 
-One-to-Many
-
-A job can receive many applications.
-
-Each application belongs to one job.
+Linked to exactly one application.
 
 ---
 
-## Application → Interview
+## Resumes
 
-Relationship:
+Stores uploaded resume metadata.
 
-One-to-One (Optional)
-
-An interview exists only after an application is shortlisted.
+Actual files are stored in Cloudinary.
 
 ---
 
-## User → Notification
+## Notifications
 
-Relationship:
-
-One-to-Many
-
-Each notification belongs to one user.
+Stores user notifications generated by the system.
 
 ---
 
-## User → Refresh Token
+## Refresh Tokens
 
-Relationship:
-
-One-to-Many
+Stores active refresh sessions.
 
 Supports multiple logged-in devices.
 
 ---
 
-## User → Email Verification
+## Email Verifications
 
-Relationship:
-
-One-to-Many
-
-Stores OTP verification history.
-
-Expired records may be periodically removed.
+Stores email verification requests and expiration data.
 
 ---
 
-# 7. Data Ownership
+# 6. Database Design Rules
 
-Each collection owns its own data.
+The project follows these rules.
 
-Example:
-
-* Jobs own job information.
-* Companies own company information.
-* Applications own application status.
-* Interviews own interview details.
-
-Collections should not duplicate business data owned by another collection.
+- Use ObjectId references instead of embedded documents for relationships.
+- Avoid duplicate data whenever possible.
+- Store only Cloudinary URLs for uploaded files.
+- Every collection includes timestamps.
+- Use indexes on frequently queried fields.
+- Keep documents focused on a single responsibility.
 
 ---
 
-# 8. Reference Strategy
+# 7. Cascade Strategy
 
-Relationships use MongoDB ObjectId references.
+MongoDB does not enforce cascading deletes.
 
-Example:
-
-Application
-
-* userId
-* jobId
-
-Job
-
-* companyId
-
-Company
-
-* ownerId
-
-Interview
-
-* applicationId
-
----
-
-# 9. File Storage Strategy
-
-Binary files are **never** stored in MongoDB.
-
-Files are uploaded to Cloudinary.
-
-MongoDB stores:
-
-* File URL
-* Public ID
-* Metadata (if required)
-
----
-
-# 10. Indexing Strategy
-
-Indexes will be added for frequently queried fields.
-
-Initial indexes include:
-
-Users
-
-* email (unique)
-
-Companies
-
-* ownerId
-
-Jobs
-
-* companyId
-* location
-* employmentType
-* status
-
-Applications
-
-* userId
-* jobId
-* status
-
-Interviews
-
-* applicationId
-* scheduledAt
-
-Notifications
-
-* userId
-* isRead
-
-Refresh Tokens
-
-* userId
-* expiresAt
-
-Email Verification
-
-* email
-* expiresAt
-
-Indexes may evolve based on application usage.
-
----
-
-# 11. Cascade Rules
-
-MongoDB does not provide automatic cascade deletes.
-
-The application layer is responsible for maintaining consistency.
+Application logic is responsible for maintaining consistency.
 
 Examples:
 
-Deleting a company:
-
-* Archive or remove related jobs according to business rules.
-
-Deleting a job:
-
-* Handle related applications safely.
-
-Deleting a user:
-
-* Preserve historical data where appropriate instead of hard deletion.
-
-Cascade behavior will be defined within each module specification.
+- Deleting a job should remove related applications.
+- Deleting a user should clean up owned resources where appropriate.
+- Some records may be soft deleted instead of permanently removed.
 
 ---
 
-# 12. Soft Delete Strategy
+# 8. Indexing Strategy
 
-Business entities should prefer soft deletion.
+Indexes should be created for frequently searched fields.
 
-Recommended fields:
+Examples include:
 
-* isDeleted
-* deletedAt
+Users
 
-Authentication and temporary collections may use hard deletion when appropriate.
+- email (unique)
+- role
 
----
+Jobs
 
-# 13. Timestamp Strategy
+- companyId
+- status
+- createdAt
 
-Every collection uses Mongoose timestamps.
+Applications
 
-Fields:
+- studentId
+- jobId
+- status
 
-* createdAt
-* updatedAt
+Refresh Tokens
 
-All timestamps use UTC.
-
----
-
-# 14. Future Expansion
-
-The architecture supports adding new collections without redesigning existing relationships.
-
-Possible future collections include:
-
-* bookmarks
-* skills
-* experiences
-* education
-* analytics
-* activity_logs
-* recruiter_teams
-* permissions
+- token
+- userId
 
 ---
 
-# 15. Review Checklist
+# 9. Data Integrity
 
-Before implementation:
+To maintain consistency:
 
-* Collections identified
-* Relationships verified
-* References defined
-* Ownership established
-* Indexing planned
-* File strategy documented
-* Cascade rules considered
-* Future scalability reviewed
+- Validate all incoming data.
+- Prevent duplicate email accounts.
+- Enforce unique constraints where required.
+- Keep references valid.
+- Reject orphaned records whenever possible.
 
 ---
 
-# 16. Document Status
+# 10. Future Scalability
 
-**Status:** Draft
+The database design should support:
 
-**Next Step:** 03_BACKEND_ARCHITECTURE.md
+- Redis caching
+- Full-text search
+- Analytics
+- Audit logs
+- Event-driven architecture
+- Database sharding if required
 
-**Implementation:** Not Started
+These enhancements should not require major schema redesign.
+
+---
+
+# 11. References
+
+This document defines database architecture only.
+
+Related documents:
+
+- 00_PROJECT_CONTEXT.md
+- 01_ENGINEERING_STANDARDS.md
+- 03_BACKEND_ARCHITECTURE.md
+
+Module-specific schemas are documented in their respective `SPEC.md` files.
+
+---
+
+# Document Status
+
+**Status:** Approved
+
+**Next Document:** 03_BACKEND_ARCHITECTURE.md

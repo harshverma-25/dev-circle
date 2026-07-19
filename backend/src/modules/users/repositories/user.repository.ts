@@ -11,6 +11,11 @@ export class UserRepository {
     return User.findById(id);
   }
 
+  async findByUsername(username: string): Promise<IUserDocument | null> {
+    // Case-insensitive search for username
+    return User.findOne({ username: username.toLowerCase() });
+  }
+
   async create(userData: Partial<IUser>): Promise<IUserDocument> {
     return User.create(userData);
   }
@@ -19,6 +24,6 @@ export class UserRepository {
     id: string | Types.ObjectId,
     updateData: Partial<IUser>
   ): Promise<IUserDocument | null> {
-    return User.findByIdAndUpdate(id, updateData, { new: true });
+    return User.findByIdAndUpdate(id, { $set: updateData }, { new: true });
   }
 }

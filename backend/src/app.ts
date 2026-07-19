@@ -4,6 +4,7 @@ import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import { authRoutes } from "./modules/auth/routes/auth.routes.js";
+import { userRoutes } from "./modules/users/routes/user.routes.js";
 import { errorHandler } from "./shared/middleware/error.middleware.js";
 
 const app: Express = express();
@@ -52,6 +53,10 @@ app.get("/api/health", (req: Request, res: Response) => {
 // Supports both V1 API base path and legacy base path for backward compatibility
 app.use("/api/v1/auth", authLimiter, authRoutes);
 app.use("/api/auth", authLimiter, authRoutes);
+
+// ─── Users Routes ────────────────────────────────────────────────────────────
+app.use("/api/v1/users", userRoutes);
+app.use("/api/users", userRoutes);
 
 // ─── Global Error Handler ─────────────────────────────────────────────────────
 app.use(errorHandler);

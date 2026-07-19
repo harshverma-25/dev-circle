@@ -40,6 +40,14 @@ export const errorHandler = (
     statusCode = 401;
     code = "TOKEN_EXPIRED";
     message = "Token expired";
+  } else if (err.code === "LIMIT_FILE_SIZE") {
+    statusCode = 413;
+    code = "FILE_TOO_LARGE";
+    message = "Uploaded file exceeds size limit";
+  } else if (err.message && (err.message.includes("Only PDF") || err.message.includes("Only JPG, JPEG, PNG, and WEBP") || err.message.includes("formats are allowed"))) {
+    statusCode = 415;
+    code = "UNSUPPORTED_FILE_TYPE";
+    message = err.message;
   } else if (err instanceof Error) {
     message = err.message;
   }

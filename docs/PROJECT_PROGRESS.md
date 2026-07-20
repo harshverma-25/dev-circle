@@ -17,6 +17,7 @@
 - [x] Interviews
 - [x] AI
 - [x] Notifications
+- [x] Search
 
 ## Backend
 
@@ -28,6 +29,7 @@
 - [x] Interviews
 - [x] AI
 - [x] Notifications
+- [x] Search
 
 ## Frontend
 

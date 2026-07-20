@@ -4,25 +4,25 @@
 
 - [x] Project Context
 - [x] Engineering Standards
-- [ ] Database Architecture
-- [ ] Backend Architecture
+- [x] Database Architecture
+- [x] Backend Architecture
 
 ## Modules
 
-- [ ] Authentication
-- [ ] User
-- [ ] Company
-- [ ] Jobs
+- [x] Authentication
+- [x] User
+- [x] Company
+- [x] Jobs
 - [ ] Applications
 - [ ] Interviews
 - [ ] AI
 
 ## Backend
 
-- [ ] Auth
-- [ ] Users
-- [ ] Companies
-- [ ] Jobs
+- [x] Auth
+- [x] Users
+- [x] Companies
+- [x] Jobs
 - [ ] Applications
 
 ## Frontend

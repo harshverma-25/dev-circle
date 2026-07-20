@@ -18,6 +18,7 @@
 - [x] AI
 - [x] Notifications
 - [x] Search
+- [x] Admin
 
 ## Backend
 
@@ -30,6 +31,7 @@
 - [x] AI
 - [x] Notifications
 - [x] Search
+- [x] Admin
 
 ## Frontend
 

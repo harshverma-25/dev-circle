@@ -11,6 +11,7 @@ import { applicationRoutes } from "./modules/applications/routes/application.rou
 import { interviewRoutes } from "./modules/interviews/routes/interview.routes.js";
 import { aiRoutes } from "./modules/ai/routes/ai.routes.js";
 import { searchRoutes } from "./modules/search/routes/search.routes.js";
+import { adminRoutes } from "./modules/admin/routes/admin.routes.js";
 import { errorHandler } from "./shared/middleware/error.middleware.js";
 
 const app: Express = express();
@@ -87,6 +88,10 @@ app.use("/api/ai", aiRoutes);
 // ─── Search Routes ───────────────────────────────────────────────────────────
 app.use("/api/v1/search", searchRoutes);
 app.use("/api/search", searchRoutes);
+
+// ─── Admin Routes ────────────────────────────────────────────────────────────
+app.use("/api/v1/admin", adminRoutes);
+app.use("/api/admin", adminRoutes);
 
 // ─── Global Error Handler ─────────────────────────────────────────────────────
 app.use(errorHandler);

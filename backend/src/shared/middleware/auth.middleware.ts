@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { verifyAccessToken } from "../utils/jwt.util.js";
 import { UserRepository } from "../../modules/users/repositories/user.repository.js";
+import { BannedUser } from "../../modules/admin/models/banned-user.model.js";
 import { AuthenticationError, CustomError } from "../errors/custom.error.js";
 
 const userRepo = new UserRepository();
@@ -23,6 +24,12 @@ export const protect = async (
     const user = await userRepo.findById(decoded.userId);
     if (!user) {
       throw new AuthenticationError("User session no longer exists", "UNAUTHORIZED");
+    }
+
+    // Check if the user is banned
+    const isBanned = await BannedUser.exists({ userId: user._id });
+    if (isBanned) {
+      throw new AuthenticationError("Your account has been banned by the administrator", "BANNED");
     }
 
     if (!user.isVerified) {

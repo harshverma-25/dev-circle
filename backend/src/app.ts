@@ -7,6 +7,9 @@ import { authRoutes } from "./modules/auth/routes/auth.routes.js";
 import { userRoutes } from "./modules/users/routes/user.routes.js";
 import { companyRoutes } from "./modules/companies/routes/company.routes.js";
 import { jobRoutes } from "./modules/jobs/routes/job.routes.js";
+import { applicationRoutes } from "./modules/applications/routes/application.routes.js";
+import { interviewRoutes } from "./modules/interviews/routes/interview.routes.js";
+import { aiRoutes } from "./modules/ai/routes/ai.routes.js";
 import { errorHandler } from "./shared/middleware/error.middleware.js";
 
 const app: Express = express();
@@ -67,6 +70,18 @@ app.use("/api/companies", companyRoutes);
 // ─── Jobs Routes ─────────────────────────────────────────────────────────────
 app.use("/api/v1/jobs", jobRoutes);
 app.use("/api/jobs", jobRoutes);
+
+// ─── Applications Routes ──────────────────────────────────────────────────────
+app.use("/api/v1/applications", applicationRoutes);
+app.use("/api/applications", applicationRoutes);
+
+// ─── Interviews Routes ────────────────────────────────────────────────────────
+app.use("/api/v1/interviews", interviewRoutes);
+app.use("/api/interviews", interviewRoutes);
+
+// ─── AI Routes ────────────────────────────────────────────────────────────────
+app.use("/api/v1/ai", aiRoutes);
+app.use("/api/ai", aiRoutes);
 
 // ─── Global Error Handler ─────────────────────────────────────────────────────
 app.use(errorHandler);

@@ -13,9 +13,9 @@
 - [x] User
 - [x] Company
 - [x] Jobs
-- [ ] Applications
-- [ ] Interviews
-- [ ] AI
+- [x] Applications
+- [x] Interviews
+- [x] AI
 
 ## Backend
 
@@ -23,7 +23,9 @@
 - [x] Users
 - [x] Companies
 - [x] Jobs
-- [ ] Applications
+- [x] Applications
+- [x] Interviews
+- [x] AI
 
 ## Frontend
 

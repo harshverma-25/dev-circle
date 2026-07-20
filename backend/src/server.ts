@@ -30,9 +30,16 @@ if ((process.env.JWT_REFRESH_SECRET?.length || 0) < 32) {
   );
 }
 
+import { initNotificationListeners } from "./modules/notifications/services/notification.service.js";
+import { registerMongooseHooks } from "./modules/notifications/hooks/mongoose.hooks.js";
+
 const PORT = process.env.PORT || 5000;
 
 connectDB().then(() => {
+  // Initialize notification listeners & Mongoose model hooks
+  initNotificationListeners();
+  registerMongooseHooks();
+
   app.listen(PORT, () => {
     Logger.info(`🚀 Server running on port ${PORT} in ${process.env.NODE_ENV || "development"} mode`);
   });

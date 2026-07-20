@@ -16,6 +16,7 @@
 - [x] Applications
 - [x] Interviews
 - [x] AI
+- [x] Notifications
 
 ## Backend
 
@@ -26,6 +27,7 @@
 - [x] Applications
 - [x] Interviews
 - [x] AI
+- [x] Notifications
 
 ## Frontend
 

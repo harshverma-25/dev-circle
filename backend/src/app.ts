@@ -5,6 +5,7 @@ import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import { authRoutes } from "./modules/auth/routes/auth.routes.js";
 import { userRoutes } from "./modules/users/routes/user.routes.js";
+import { companyRoutes } from "./modules/companies/routes/company.routes.js";
 import { errorHandler } from "./shared/middleware/error.middleware.js";
 
 const app: Express = express();
@@ -57,6 +58,10 @@ app.use("/api/auth", authLimiter, authRoutes);
 // ─── Users Routes ────────────────────────────────────────────────────────────
 app.use("/api/v1/users", userRoutes);
 app.use("/api/users", userRoutes);
+
+// ─── Companies Routes ────────────────────────────────────────────────────────
+app.use("/api/v1/companies", companyRoutes);
+app.use("/api/companies", companyRoutes);
 
 // ─── Global Error Handler ─────────────────────────────────────────────────────
 app.use(errorHandler);

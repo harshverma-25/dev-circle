@@ -53,3 +53,37 @@ export const uploadAvatarMiddleware = multer({
   fileFilter: avatarFilter,
   limits: { fileSize: 2 * 1024 * 1024 } // 2 MB limit
 }).single("profilePicture");
+
+// Cloudinary storage configuration for Company Logos
+const companyLogoStorage = new CloudinaryStorage({
+  cloudinary: cloudinary as any,
+  params: {
+    folder: "dev-circle/companies/logos",
+    allowed_formats: ["jpg", "jpeg", "png", "webp"],
+    resource_type: "image",
+    transformation: [{ width: 400, height: 400, crop: "limit" }] // Resize before upload
+  } as any
+});
+
+// Cloudinary storage configuration for Company Banners
+const companyBannerStorage = new CloudinaryStorage({
+  cloudinary: cloudinary as any,
+  params: {
+    folder: "dev-circle/companies/banners",
+    allowed_formats: ["jpg", "jpeg", "png", "webp"],
+    resource_type: "image"
+  } as any
+});
+
+export const uploadCompanyLogoMiddleware = multer({
+  storage: companyLogoStorage,
+  fileFilter: avatarFilter,
+  limits: { fileSize: 2 * 1024 * 1024 } // 2 MB limit
+}).single("logo");
+
+export const uploadCompanyBannerMiddleware = multer({
+  storage: companyBannerStorage,
+  fileFilter: avatarFilter,
+  limits: { fileSize: 5 * 1024 * 1024 } // 5 MB limit
+}).single("banner");
+

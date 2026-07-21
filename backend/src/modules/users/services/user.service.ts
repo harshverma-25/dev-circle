@@ -1,7 +1,6 @@
 import { UserRepository } from "../repositories/user.repository.js";
 import { ResumeRepository } from "../repositories/resume.repository.js";
 import { NotFoundError, CustomError } from "../../../shared/errors/custom.error.js";
-// @ts-ignore
 import cloudinary from "../../../config/cloudinary.js";
 import { IUserDocument } from "../types/user.types.js";
 

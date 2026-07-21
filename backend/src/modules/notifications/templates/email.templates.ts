@@ -1,3 +1,5 @@
+import { env } from "../../../config/env.js";
+
 export interface IEmailTemplateData {
   verificationLink?: string;
   name?: string;
@@ -124,7 +126,7 @@ export const getEmailHTML = (type: string, data: IEmailTemplateData): { subject:
         <p>Welcome to DevCircle! We are thrilled to have you join our developer hiring and career community.</p>
         <p>Your account is now fully active. Explore opportunities, practice mock interviews, and build your technical profile.</p>
         <div class="button-container">
-          <a href="${process.env.SITE_URL || "http://localhost:3000"}/dashboard" class="button" style="color: #ffffff;">Get Started</a>
+          <a href="${env.SITE_URL}/dashboard" class="button" style="color: #ffffff;">Get Started</a>
         </div>
       `;
       return { subject, html: baseTemplate(subject, content) };
@@ -137,7 +139,7 @@ export const getEmailHTML = (type: string, data: IEmailTemplateData): { subject:
         <p>A new application has been submitted by <span class="highlight">${data.candidateName}</span> for the role of <span class="highlight">${data.jobTitle}</span>.</p>
         <p>You can review their resume snapshot and profile on your recruitment dashboard.</p>
         <div class="button-container">
-          <a href="${process.env.SITE_URL || "http://localhost:3000"}/recruiter/applications" class="button" style="color: #ffffff;">Review Application</a>
+          <a href="${env.SITE_URL}/recruiter/applications" class="button" style="color: #ffffff;">Review Application</a>
         </div>
       `;
       return { subject, html: baseTemplate(subject, content) };
@@ -215,7 +217,7 @@ export const getEmailHTML = (type: string, data: IEmailTemplateData): { subject:
         <p>You have been invited to join <span class="highlight">${data.companyName}</span> as a recruiter on DevCircle.</p>
         <p>Please register or sign in to accept the invitation and begin recruiting.</p>
         <div class="button-container">
-          <a href="${data.inviteLink || (process.env.SITE_URL || "http://localhost:3000")}" class="button" style="color: #ffffff;">Join Company</a>
+          <a href="${data.inviteLink || (env.SITE_URL)}" class="button" style="color: #ffffff;">Join Company</a>
         </div>
       `;
       return { subject, html: baseTemplate(subject, content) };

@@ -3,6 +3,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
+import { env } from "./config/env.js";
 import { authRoutes } from "./modules/auth/routes/auth.routes.js";
 import { userRoutes } from "./modules/users/routes/user.routes.js";
 import { companyRoutes } from "./modules/companies/routes/company.routes.js";
@@ -16,24 +17,19 @@ import { errorHandler } from "./shared/middleware/error.middleware.js";
 
 const app: Express = express();
 
-// Trust proxy for rate limiting (especially behind Cloudflare/Vercel/Heroku)
+// Trust proxy — required behind Cloudflare / Vercel / Railway / Heroku
 app.set("trust proxy", 1);
 
-// Global Middlewares
+// ─── Security ─────────────────────────────────────────────────────────────────
 app.use(helmet());
 
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
-  message: "Too many requests, please try again later"
-});
-
+// ─── CORS ─────────────────────────────────────────────────────────────────────
 app.use(
   cors({
     origin: [
       "http://localhost:3000",
       "http://localhost:3001",
-      process.env.FRONTEND_URL || ""
+      env.FRONTEND_URL
     ].filter(Boolean),
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
@@ -41,57 +37,48 @@ app.use(
   })
 );
 
+// ─── Body Parsers ─────────────────────────────────────────────────────────────
 app.use(express.json());
 app.use(cookieParser());
 
-// ─── Health Check ────────────────────────────────────────────────────────────
-app.get("/api/health", (req: Request, res: Response) => {
+// ─── Rate Limiter ─────────────────────────────────────────────────────────────
+const globalLimiter = rateLimit({
+  windowMs: env.RATE_LIMIT_WINDOW_MS,
+  max: env.RATE_LIMIT_MAX,
+  message: "Too many requests, please try again later",
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20,                    // Strict limit for auth endpoints
+  message: "Too many authentication attempts, please try again later",
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+app.use("/api", globalLimiter);
+
+// ─── Health Check ─────────────────────────────────────────────────────────────
+app.get("/api/health", (_req: Request, res: Response) => {
   res.status(200).json({
     success: true,
     message: "Server is healthy",
-    data: {
-      status: "OK",
-      timestamp: new Date()
-    }
+    data: { status: "OK", timestamp: new Date() }
   });
 });
 
-// ─── Auth Routes ─────────────────────────────────────────────────────────────
-// Supports both V1 API base path and legacy base path for backward compatibility
+// ─── API Routes ───────────────────────────────────────────────────────────────
 app.use("/api/v1/auth", authLimiter, authRoutes);
-app.use("/api/auth", authLimiter, authRoutes);
-
-// ─── Users Routes ────────────────────────────────────────────────────────────
 app.use("/api/v1/users", userRoutes);
-app.use("/api/users", userRoutes);
-
-// ─── Companies Routes ────────────────────────────────────────────────────────
 app.use("/api/v1/companies", companyRoutes);
-app.use("/api/companies", companyRoutes);
-
-// ─── Jobs Routes ─────────────────────────────────────────────────────────────
 app.use("/api/v1/jobs", jobRoutes);
-app.use("/api/jobs", jobRoutes);
-
-// ─── Applications Routes ──────────────────────────────────────────────────────
 app.use("/api/v1/applications", applicationRoutes);
-app.use("/api/applications", applicationRoutes);
-
-// ─── Interviews Routes ────────────────────────────────────────────────────────
 app.use("/api/v1/interviews", interviewRoutes);
-app.use("/api/interviews", interviewRoutes);
-
-// ─── AI Routes ────────────────────────────────────────────────────────────────
 app.use("/api/v1/ai", aiRoutes);
-app.use("/api/ai", aiRoutes);
-
-// ─── Search Routes ───────────────────────────────────────────────────────────
 app.use("/api/v1/search", searchRoutes);
-app.use("/api/search", searchRoutes);
-
-// ─── Admin Routes ────────────────────────────────────────────────────────────
 app.use("/api/v1/admin", adminRoutes);
-app.use("/api/admin", adminRoutes);
 
 // ─── Global Error Handler ─────────────────────────────────────────────────────
 app.use(errorHandler);

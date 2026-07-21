@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { CustomError } from "../errors/custom.error.js";
 import { Logger } from "../../infrastructure/logger/logger.js";
+import { env } from "../../config/env.js";
 
 export const errorHandler = (
   err: any,
@@ -55,7 +56,7 @@ export const errorHandler = (
   // Logger log error
   Logger.error(`${req.method} ${req.originalUrl} - Error: ${message}`, err);
 
-  const isProd = process.env.NODE_ENV === "production";
+  const isProd = env.NODE_ENV === "production";
   const finalMessage = isProd && statusCode === 500 ? "Something went wrong" : message;
 
   res.status(statusCode).json({

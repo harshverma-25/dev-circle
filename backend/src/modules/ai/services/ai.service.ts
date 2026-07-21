@@ -18,6 +18,7 @@ import {
   IJobDescriptionResponse,
   ICareerCoachResponse
 } from "../types/ai.types.js";
+import { env } from "../../../config/env.js";
 
 const FREE_MODELS = [
   "meta-llama/llama-3.3-70b-instruct:free",
@@ -35,15 +36,15 @@ export class AIService {
 
   private getClient(): OpenAI {
     if (!this.openai) {
-      if (!process.env.OPENROUTER_API_KEY) {
-        throw new CustomError("OPENROUTER_API_KEY is not defined in environment variables", 500, "MODEL_ERROR");
+      if (!env.OPENROUTER_API_KEY) {
+        throw new CustomError("OPENROUTER_API_KEY is not configured", 500, "MODEL_ERROR");
       }
       this.openai = new OpenAI({
         baseURL: "https://openrouter.ai/api/v1",
-        apiKey: process.env.OPENROUTER_API_KEY,
+        apiKey: env.OPENROUTER_API_KEY,
         timeout: 25000,
         defaultHeaders: {
-          "HTTP-Referer": process.env.SITE_URL || "http://localhost:3000",
+          "HTTP-Referer": env.SITE_URL,
           "X-Title": "DevCircle AI"
         }
       });

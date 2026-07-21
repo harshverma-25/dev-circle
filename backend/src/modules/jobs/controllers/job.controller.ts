@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { JobService } from "../services/job.service.js";
-import jwt from "jsonwebtoken";
+import { verifyAccessToken } from "../../../shared/utils/jwt.util.js";
 
 const jobService = new JobService();
 
@@ -9,12 +9,11 @@ const getOptionalUserId = (req: Request): string | undefined => {
     const authHeader = req.headers.authorization;
     if (authHeader && authHeader.startsWith("Bearer ")) {
       const token = authHeader.split(" ")[1];
-      const secret = process.env.JWT_SECRET || "fallback_secret";
-      const decoded = jwt.verify(token, secret) as any;
+      const decoded = verifyAccessToken(token);
       return decoded.userId;
     }
-  } catch (e) {
-    // Ignore and fallback
+  } catch {
+    // Token absent or invalid — treat as unauthenticated public request
   }
   return undefined;
 };

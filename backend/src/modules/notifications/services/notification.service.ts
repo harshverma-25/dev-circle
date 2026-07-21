@@ -1,13 +1,13 @@
 import { EmailQueueService } from "../queues/email.queue.js";
 import { appEvents } from "../../../shared/utils/event.util.js";
 import { Logger } from "../../../infrastructure/logger/logger.js";
+import { env } from "../../../config/env.js";
 
 const emailQueue = new EmailQueueService();
 
 export class NotificationService {
   async sendVerificationEmail(email: string, name: string, token: string): Promise<void> {
-    const siteUrl = process.env.SITE_URL || "http://localhost:3000";
-    const verificationLink = `${siteUrl}/verify-email?token=${token}`;
+    const verificationLink = `${env.SITE_URL}/verify-email?token=${token}`;
     await emailQueue.addEmailJob(email, "verification", { name, verificationLink });
   }
 

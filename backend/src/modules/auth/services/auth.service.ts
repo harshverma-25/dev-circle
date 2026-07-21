@@ -15,15 +15,17 @@ import {
   CustomError,
   NotFoundError
 } from "../../../shared/errors/custom.error.js";
-import { sendVerificationEmail } from "../../../infrastructure/email/email.service.js";
+import { NotificationService } from "../../notifications/services/notification.service.js";
 import { IUserDocument } from "../../users/types/user.types.js";
+import { env } from "../../../config/env.js";
 
-const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const googleClient = new OAuth2Client(env.GOOGLE_CLIENT_ID);
 
 export class AuthService {
   private userRepo = new UserRepository();
   private tokenRepo = new RefreshTokenRepository();
   private verificationRepo = new EmailVerificationRepository();
+  private notificationService = new NotificationService();
 
   async register(data: any): Promise<void> {
     const { name, email, password, role } = data;
@@ -55,7 +57,7 @@ export class AuthService {
     await this.verificationRepo.create(user._id, token, expiresAt);
 
     // Trigger verification email sending
-    await sendVerificationEmail(email, name, token);
+    await this.notificationService.sendVerificationEmail(email, name, token);
   }
 
   async login(data: any): Promise<{ user: IUserDocument; accessToken: string; refreshToken: string }> {
@@ -104,7 +106,7 @@ export class AuthService {
     try {
       const ticket = await googleClient.verifyIdToken({
         idToken,
-        audience: process.env.GOOGLE_CLIENT_ID
+        audience: env.GOOGLE_CLIENT_ID
       });
       const payload = ticket.getPayload();
       if (!payload || !payload.email || !payload.name) {
@@ -212,7 +214,7 @@ export class AuthService {
     await this.verificationRepo.create(user._id, token, expiresAt);
 
     // Send email
-    await sendVerificationEmail(email, user.name, token);
+    await this.notificationService.sendVerificationEmail(email, user.name, token);
   }
 
   async refreshTokens(token: string): Promise<{ accessToken: string; refreshToken: string }> {

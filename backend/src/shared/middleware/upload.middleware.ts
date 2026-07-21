@@ -1,6 +1,5 @@
 import multer from "multer";
 import { CloudinaryStorage } from "multer-storage-cloudinary";
-// @ts-ignore
 import cloudinary from "../../config/cloudinary.js";
 
 // Cloudinary storage configuration for Resumes

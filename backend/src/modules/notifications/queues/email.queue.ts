@@ -3,6 +3,7 @@ import { Redis } from "ioredis";
 import nodemailer from "nodemailer";
 import { getEmailHTML, IEmailTemplateData } from "../templates/email.templates.js";
 import { Logger } from "../../../infrastructure/logger/logger.js";
+import { env } from "../../../config/env.js";
 
 export interface IEmailJobData {
   to: string;
@@ -22,13 +23,11 @@ export class EmailQueueService {
 
   private async init() {
     try {
-      const host = process.env.REDIS_HOST || "127.0.0.1";
-      const port = parseInt(process.env.REDIS_PORT || "6379", 10);
-
       this.redisClient = new Redis({
-        host,
-        port,
-        maxRetriesPerRequest: 1, // Fail fast if Redis is down
+        host: env.REDIS_HOST,
+        port: env.REDIS_PORT,
+        password: env.REDIS_PASSWORD || undefined,
+        maxRetriesPerRequest: 1,
         connectTimeout: 2000,
         lazyConnect: true
       });
@@ -51,31 +50,35 @@ export class EmailQueueService {
       });
 
       if (this.isRedisAvailable) {
-        Logger.info("[Notification Queue] Redis is active. Setting up BullMQ...");
-        
-        // Connection for BullMQ
+        Logger.info("[EmailQueue] Redis active — BullMQ queue initialized.");
+
         const connection = new Redis({
-          host,
-          port,
+          host: env.REDIS_HOST,
+          port: env.REDIS_PORT,
+          password: env.REDIS_PASSWORD || undefined,
           maxRetriesPerRequest: null // Required by BullMQ
         });
 
         this.queue = new Queue("email-queue", { connection });
-        
-        this.worker = new Worker("email-queue", async (job: Job<IEmailJobData>) => {
-          await this.processEmailJob(job.data);
-        }, { connection });
+
+        this.worker = new Worker(
+          "email-queue",
+          async (job: Job<IEmailJobData>) => {
+            await this.processEmailJob(job.data);
+          },
+          { connection }
+        );
 
         this.worker.on("completed", (job) => {
-          Logger.info(`[Notification Queue] Job ${job.id} of type ${job.data.type} sent to ${job.data.to} successfully`);
+          Logger.info(`[EmailQueue] Job ${job.id} (${job.data.type}) delivered to ${job.data.to}`);
         });
 
         this.worker.on("failed", (job, err) => {
-          Logger.error(`[Notification Queue] Job ${job?.id} failed with error: ${err.message}`);
+          Logger.error(`[EmailQueue] Job ${job?.id} failed: ${err.message}`);
         });
       }
     } catch (err: any) {
-      Logger.warn(`[Notification Queue] Redis is not active (${err.message}). Falling back to in-memory async dispatch.`);
+      Logger.warn(`[EmailQueue] Redis unavailable (${err.message}) — falling back to in-memory dispatch.`);
       this.isRedisAvailable = false;
     }
   }
@@ -84,55 +87,41 @@ export class EmailQueueService {
     const { to, type, data } = jobData;
     const { subject, html } = getEmailHTML(type, data);
 
-    const host = process.env.SMTP_HOST;
-    const port = parseInt(process.env.SMTP_PORT || "587", 10);
-    const user = process.env.SMTP_USER;
-    const pass = process.env.SMTP_PASS;
-    const from = process.env.SMTP_FROM || "DevCircle <noreply@devcircle.com>";
-
-    if (host && user && pass) {
+    if (env.SMTP_HOST && env.SMTP_USER && env.SMTP_PASS) {
       const transporter = nodemailer.createTransport({
-        host,
-        port,
-        secure: port === 465,
-        auth: { user, pass }
+        host: env.SMTP_HOST,
+        port: env.SMTP_PORT,
+        secure: env.SMTP_PORT === 465,
+        auth: { user: env.SMTP_USER, pass: env.SMTP_PASS }
       });
-      await transporter.sendMail({ from, to, subject, html });
+      await transporter.sendMail({ from: env.SMTP_FROM, to, subject, html });
     } else {
-      // Mock SMTP logger fallback to screen
       Logger.info(`
-      -------------------------------------------------------------
-      ✉️  [MOCK EMAIL SENT]
+      ─────────────────────────────────────────────
+      ✉️  [MOCK EMAIL — configure SMTP to send real]
       To:       ${to}
       Subject:  ${subject}
       Template: ${type}
       Data:     ${JSON.stringify(data)}
-      -------------------------------------------------------------
+      ─────────────────────────────────────────────
       `);
     }
   }
 
   async addEmailJob(to: string, type: string, data: IEmailTemplateData): Promise<void> {
     if (this.isRedisAvailable && this.queue) {
-      // Add to BullMQ with 3 retries and exponential backoff
       await this.queue.add(
         "send-email",
         { to, type, data },
-        {
-          attempts: 3,
-          backoff: {
-            type: "exponential",
-            delay: 5000
-          }
-        }
+        { attempts: 3, backoff: { type: "exponential", delay: 5000 } }
       );
     } else {
-      // In-memory async execution
+      // In-memory fallback — fire and forget
       setTimeout(async () => {
         try {
           await this.processEmailJob({ to, type, data });
         } catch (err: any) {
-          Logger.error(`[Notification Fallback] Failed to send email to ${to}: ${err.message}`);
+          Logger.error(`[EmailQueue] Fallback dispatch failed for ${to}: ${err.message}`);
         }
       }, 0);
     }
